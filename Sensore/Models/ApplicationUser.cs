@@ -1,5 +1,4 @@
-﻿using Sensore.Core.Models;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -18,19 +17,19 @@ namespace Sensore.Models
         public virtual ICollection<PressureFrame> PressureFrames { get; set; }
 
         // 1-to-many relationship with Comment (a user can author many comments)
-        [InverseProperty("Author")]
+        [InverseProperty("AuthorUser")]
         public virtual ICollection<Comment> AuthoredComments { get; set; }
 
         // 1-to-many relationship with Comment (a patient can be the subject of many comments)
-        [InverseProperty("Patient")]
+        [InverseProperty("PatientUser")]
         public virtual ICollection<Comment> SubjectComments { get; set; }
 
         // Many-to-many: Links to clinicians (if this user is a patient)
-        [InverseProperty("Patient")]
+        [InverseProperty("PatientUser")]
         public virtual ICollection<ClinicianPatientMap> CliniciansAssigned { get; set; }
 
         // Many-to-many: Links to patients (if this user is a clinician)
-        [InverseProperty("Clinician")]
+        [InverseProperty("ClinicianUser")]
         public virtual ICollection<ClinicianPatientMap> PatientsAssigned { get; set; }
     }
 }
