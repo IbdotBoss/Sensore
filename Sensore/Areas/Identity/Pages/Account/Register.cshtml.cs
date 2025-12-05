@@ -22,6 +22,7 @@ using Sensore.Models;
 
 namespace Sensore.Areas.Identity.Pages.Account
 {
+    [Authorize(Roles = "Admin")] // Restrict registration to Admin only
     public class RegisterModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
@@ -121,7 +122,7 @@ namespace Sensore.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User created a new account with password.");
+                    _logger.LogInformation("Admin created a new user account.");
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -135,15 +136,8 @@ namespace Sensore.Areas.Identity.Pages.Account
                     await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
                         $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
-                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
-                    {
-                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
-                    }
-                    else
-                    {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        return LocalRedirect(returnUrl);
-                    }
+                    // Redirect admin back to user management instead of signing in as the new user
+                    return RedirectToPage("/Admin/Index", new { area = "" });
                 }
                 foreach (var error in result.Errors)
                 {
