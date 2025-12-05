@@ -7,188 +7,206 @@ using Sensore.Models;
 
 namespace Sensore.Controllers
 {
-    /// <summary>
-    /// Controller for managing clinician-patient relationships.
-    /// </summary>
-    [Authorize]
-    public class CliniciansController : Controller
+    [Authorize(Roles = "Clinician")]
+    public class ClinicianController : Controller
     {
-   private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public CliniciansController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
-  {
-        _context = context;
-     _userManager = userManager;
-        }
-
-        // GET: Clinicians
-        [Authorize(Roles = "Admin,Clinician")]
-      public async Task<IActionResult> Index()
-   {
-       var clinicians = await _userManager.GetUsersInRoleAsync("Clinician");
- return View(clinicians);
-   }
-
-        // GET: Clinicians/Details/5
-        [Authorize(Roles = "Admin,Clinician")]
-      public async Task<IActionResult> Details(string id)
-    {
-            if (id == null)
-    {
-     return NotFound();
-        }
-
-   var clinician = await _context.Users
-   .Include(u => u.PatientsAssigned)
-      .ThenInclude(p => p.PatientUser)
-     .ThenInclude(p => p.PatientProfile)
-  .FirstOrDefaultAsync(u => u.Id == id);
-
-         if (clinician == null)
- {
-         return NotFound();
-     }
-
-     return View(clinician);
- }
-
-  // GET: Clinicians/MyPatients
-        [Authorize(Roles = "Clinician")]
-      public async Task<IActionResult> MyPatients()
+        public ClinicianController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
-       var currentUser = await _userManager.GetUserAsync(User);
-   
-    var patients = await _context.ClinicianPatientMaps
-  .Include(c => c.PatientUser)
-  .ThenInclude(p => p.PatientProfile)
-    .Where(c => c.ClinicianUserId == currentUser.Id)
-.Select(c => c.PatientUser)
-       .ToListAsync();
-
-  return View(patients);
+            _context = context;
+            _userManager = userManager;
         }
 
-     // GET: Clinicians/AssignPatient
-   [Authorize(Roles = "Admin,Clinician")]
-      public async Task<IActionResult> AssignPatient(string clinicianId)
-     {
-     if (string.IsNullOrEmpty(clinicianId))
+        // 1. Dashboard: List of My Patients with Search and Enhanced Metrics
+        public async Task<IActionResult> Index(string? searchString)
+        {
+            var clinician = await _userManager.GetUserAsync(User);
+            if (clinician == null) return NotFound();
+
+            // Fetch assigned patients with optional search filter
+            var assignedPatientsQuery = _context.ClinicianPatientMaps
+                .Where(map => map.ClinicianUserId == clinician.Id)
+                .Select(map => map.PatientUser)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
             {
-  var currentUser = await _userManager.GetUserAsync(User);
- clinicianId = currentUser.Id;
-  }
+                assignedPatientsQuery = assignedPatientsQuery
+                    .Where(p => (p.FullName != null && p.FullName.Contains(searchString)) || 
+                               (p.Email != null && p.Email.Contains(searchString)));
+            }
 
-            var clinician = await _context.Users.FindAsync(clinicianId);
-     if (clinician == null)
+            var assignedPatients = await assignedPatientsQuery.ToListAsync();
+            var viewModel = new List<PatientListItemViewModel>();
+
+            foreach (var patient in assignedPatients)
             {
-    return NotFound();
-    }
+                // Check for alerts in the last 24 hours
+                bool hasAlert = await _context.PressureFrames
+                    .AnyAsync(f => f.PatientUserId == patient.Id
+                                   && f.IsAlertFlagged
+                                   && f.Timestamp >= DateTime.UtcNow.AddHours(-24));
 
-// Get all patients not already assigned to this clinician
-      var assignedPatientIds = await _context.ClinicianPatientMaps
-     .Where(c => c.ClinicianUserId == clinicianId)
-           .Select(c => c.PatientUserId)
-       .ToListAsync();
+                var lastFrame = await _context.PressureFrames
+                    .Where(f => f.PatientUserId == patient.Id)
+                    .OrderByDescending(f => f.Timestamp)
+                    .FirstOrDefaultAsync();
 
-   var availablePatients = await _context.Users
-   .Include(u => u.PatientProfile)
-     .Where(u => u.PatientProfile != null && !assignedPatientIds.Contains(u.Id))
-     .ToListAsync();
+                // Count messages
+                int msgCount = await _context.Comments
+                    .CountAsync(c => c.PatientUserId == patient.Id);
 
-     ViewBag.Clinician = clinician;
-      ViewBag.AvailablePatients = availablePatients;
+                // Calculate Risk Score (0-10) based on peak pressure
+                double riskScore = 0;
+                if (lastFrame != null)
+                {
+                    riskScore = Math.Round((double)lastFrame.PeakPressureIndex / 25.5, 1); // Map 255 -> 10
+                }
 
-     return View();
-}
+                viewModel.Add(new PatientListItemViewModel
+                {
+                    PatientId = patient.Id,
+                    Name = patient.FullName ?? patient.UserName ?? "Unknown",
+                    Email = patient.Email ?? "No email",
+                    HasActiveAlert = hasAlert,
+                    LastUpdate = lastFrame?.Timestamp ?? DateTime.MinValue,
+                    RiskScore = riskScore,
+                    MessageCount = msgCount
+                });
+            }
 
-        // POST: Clinicians/AssignPatient
-   [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Clinician")]
-     public async Task<IActionResult> AssignPatient(string clinicianId, string patientId)
-  {
-  if (string.IsNullOrEmpty(clinicianId) || string.IsNullOrEmpty(patientId))
- {
-      return BadRequest("Clinician ID and Patient ID are required");
- }
-
-      // Check if assignment already exists
-    var existingMapping = await _context.ClinicianPatientMaps
-        .FirstOrDefaultAsync(c => c.ClinicianUserId == clinicianId && c.PatientUserId == patientId);
-
-   if (existingMapping != null)
-      {
-   TempData["Message"] = "This patient is already assigned to the clinician.";
-    return RedirectToAction(nameof(Details), new { id = clinicianId });
- }
-
-     var mapping = new ClinicianPatientMap
-     {
-       ClinicianUserId = clinicianId,
-    PatientUserId = patientId
-   };
-
-    _context.ClinicianPatientMaps.Add(mapping);
-await _context.SaveChangesAsync();
-
-     TempData["Message"] = "Patient assigned successfully.";
-            return RedirectToAction(nameof(Details), new { id = clinicianId });
+            ViewBag.SearchString = searchString;
+            return View(viewModel);
         }
 
-        // POST: Clinicians/UnassignPatient
+        // 2. Patient Detail View
+        public async Task<IActionResult> PatientDetail(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return NotFound();
+
+            // Security Check: Ensure this patient is actually assigned to this clinician
+            var clinician = await _userManager.GetUserAsync(User);
+            if (clinician == null) return NotFound();
+
+            bool isAssigned = await _context.ClinicianPatientMaps
+                .AnyAsync(m => m.ClinicianUserId == clinician.Id && m.PatientUserId == id);
+
+            if (!isAssigned) return Forbid();
+
+            var patient = await _context.Users.FindAsync(id);
+            if (patient == null) return NotFound();
+
+            var profile = await _context.PatientProfiles.FirstOrDefaultAsync(p => p.PatientUserId == id);
+
+            // Create default profile if missing
+            if (profile == null)
+            {
+                profile = new PatientProfile 
+                { 
+                    PatientUserId = id,
+                    HighPressureThreshold = 150,
+                    MinAlertArea = 10,
+                    ContactThreshold = 3
+                };
+                _context.PatientProfiles.Add(profile);
+                await _context.SaveChangesAsync();
+            }
+
+            var latestFrame = await _context.PressureFrames
+                .Where(f => f.PatientUserId == id)
+                .OrderByDescending(f => f.Timestamp)
+                .FirstOrDefaultAsync();
+
+            var history = await _context.PressureFrames
+                .Where(f => f.PatientUserId == id && f.Timestamp >= DateTime.UtcNow.AddHours(-24))
+                .OrderBy(f => f.Timestamp)
+                .ToListAsync();
+
+            var recentComments = await _context.Comments
+                .Include(c => c.AuthorUser)
+                .Include(c => c.Replies)
+                    .ThenInclude(r => r.AuthorUser)
+                .Where(c => c.PatientUserId == id && c.ParentCommentId == null)
+                .OrderByDescending(c => c.CreatedAt)
+                .Take(20)
+                .ToListAsync();
+
+            var viewModel = new ClinicianPatientDetailViewModel
+            {
+                Patient = patient,
+                Profile = profile,
+                LatestFrame = latestFrame,
+                History = history,
+                RecentComments = recentComments
+            };
+
+            return View(viewModel);
+        }
+
+        // 3. Update Thresholds (POST)
         [HttpPost]
- [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Admin,Clinician")]
-public async Task<IActionResult> UnassignPatient(string clinicianId, string patientId)
-     {
-         if (string.IsNullOrEmpty(clinicianId) || string.IsNullOrEmpty(patientId))
-         {
-      return BadRequest("Clinician ID and Patient ID are required");
-      }
-
-       var mapping = await _context.ClinicianPatientMaps
-   .FirstOrDefaultAsync(c => c.ClinicianUserId == clinicianId && c.PatientUserId == patientId);
-
-      if (mapping == null)
-            {
-  return NotFound();
-     }
-
-     _context.ClinicianPatientMaps.Remove(mapping);
-     await _context.SaveChangesAsync();
-
-    TempData["Message"] = "Patient unassigned successfully.";
-    return RedirectToAction(nameof(Details), new { id = clinicianId });
-   }
-
-        // GET: Clinicians/PatientList/clinicianId
-        [Authorize(Roles = "Admin,Clinician")]
- public async Task<IActionResult> PatientList(string id)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateSettings(int profileId, int highPressureThreshold, int minAlertArea)
         {
-if (string.IsNullOrEmpty(id))
-     {
-        // If no ID provided, use current user
-  var currentUser = await _userManager.GetUserAsync(User);
-     id = currentUser.Id;
-     }
+            var profile = await _context.PatientProfiles.FindAsync(profileId);
+            if (profile == null) return NotFound();
 
-var clinician = await _context.Users.FindAsync(id);
-    if (clinician == null)
-  {
-    return NotFound();
- }
+            // Security check: Verify clinician has access to this patient
+            var clinician = await _userManager.GetUserAsync(User);
+            if (clinician == null) return NotFound();
 
-   var patients = await _context.ClinicianPatientMaps
-    .Include(c => c.PatientUser)
-                .ThenInclude(p => p.PatientProfile)
-     .Where(c => c.ClinicianUserId == id)
-    .Select(c => c.PatientUser)
- .ToListAsync();
+            bool isAssigned = await _context.ClinicianPatientMaps
+                .AnyAsync(m => m.ClinicianUserId == clinician.Id && m.PatientUserId == profile.PatientUserId);
 
-   ViewBag.Clinician = clinician;
+            if (!isAssigned) return Forbid();
 
-       return View(patients);
+            profile.HighPressureThreshold = highPressureThreshold;
+            profile.MinAlertArea = minAlertArea;
+
+            _context.Update(profile);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Settings updated successfully.";
+            return RedirectToAction("PatientDetail", new { id = profile.PatientUserId });
+        }
+
+        // 4. Clinician Reply to Comment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReplyToComment(string patientId, string commentText, int? parentId)
+        {
+            if (string.IsNullOrWhiteSpace(commentText) || string.IsNullOrEmpty(patientId))
+            {
+                TempData["ErrorMessage"] = "Comment text and patient ID are required.";
+                return RedirectToAction("PatientDetail", new { id = patientId });
+            }
+
+            var clinician = await _userManager.GetUserAsync(User);
+            if (clinician == null) return NotFound();
+
+            // Security check: Verify clinician has access to this patient
+            bool isAssigned = await _context.ClinicianPatientMaps
+                .AnyAsync(m => m.ClinicianUserId == clinician.Id && m.PatientUserId == patientId);
+
+            if (!isAssigned) return Forbid();
+
+            var comment = new Comment
+            {
+                AuthorUserId = clinician.Id,
+                PatientUserId = patientId,
+                CommentText = commentText,
+                CreatedAt = DateTime.UtcNow,
+                ThreadTimestamp = DateTime.UtcNow,
+                ParentCommentId = parentId
+            };
+
+            _context.Comments.Add(comment);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Comment posted successfully.";
+            return RedirectToAction("PatientDetail", new { id = patientId });
         }
     }
 }

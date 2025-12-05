@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Sensore.Models;
+using System.Security.Claims;
 
 namespace Sensore.Controllers
 {
@@ -15,6 +16,24 @@ namespace Sensore.Controllers
 
         public IActionResult Index()
         {
+            // If user is authenticated, redirect to appropriate dashboard based on role
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                if (User.IsInRole("Admin"))
+                {
+                    return RedirectToAction("Index", "Admin");
+                }
+                else if (User.IsInRole("Clinician"))
+                {
+                    return RedirectToAction("Index", "Clinician");
+                }
+                else if (User.IsInRole("Patient"))
+                {
+                    return RedirectToAction("Dashboard", "Patient");
+                }
+            }
+
+            // If not authenticated, show the home page
             return View();
         }
 

@@ -1,0 +1,88 @@
+﻿@model Sensore.Models.PatientLinkingViewModel
+@{
+    ViewData["Title"] = "Patient Linking";
+}
+
+<div class="container mt-4">
+    <h2>Patient-Clinician Manager</h2>
+    <hr />
+
+    <!-- 1. Clinician Selector -->
+    <div class="card mb-4" style="background-color: #1e1e2d; border-color: #2a2a3e;">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-center">
+                <div class="col-auto">
+                    <label class="col-form-label fw-bold">Select Clinician:</label>
+                </div>
+                <div class="col-auto">
+                    <select name="clinicianId" asp-items="Model.ClinicianList" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Choose a Clinician --</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SelectedClinicianId))
+    {
+        <div class="row">
+            <!-- Left: Available Patients -->
+            <div class="col-md-6">
+                <div class="card" style="background-color: #1e1e2d; border-color: #4caf50;">
+                    <div class="card-header text-white" style="background-color: #2a2a3e;">
+                        Available Patients
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @if (Model.AvailablePatients.Count == 0)
+                        {
+                            <li class="list-group-item text-muted">No unassigned patients found.</li>
+                        }
+                        @foreach (var patient in Model.AvailablePatients)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@patient.FullName</strong> <br />
+                                    <small class="text-muted">@patient.Email</small>
+                                </div>
+                                <form asp-action="ToggleLink" method="post">
+                                    <input type="hidden" name="clinicianId" value="@Model.SelectedClinicianId" />
+                                    <input type="hidden" name="patientId" value="@patient.Id" />
+                                    <input type="hidden" name="actionType" value="Add" />
+                                    <button type="submit" class="btn btn-sm btn-success">Link &rarr;</button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Right: Assigned Patients -->
+            <div class="col-md-6">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">Assigned Patients</div>
+                    <ul class="list-group list-group-flush">
+                        @if (Model.AssignedPatients.Count == 0)
+                        {
+                            <li class="list-group-item text-muted">No patients assigned yet.</li>
+                        }
+                        @foreach (var patient in Model.AssignedPatients)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@patient.FullName</strong> <br />
+                                    <small class="text-muted">@patient.Email</small>
+                                </div>
+                                <form asp-action="ToggleLink" method="post">
+                                    <input type="hidden" name="clinicianId" value="@Model.SelectedClinicianId" />
+                                    <input type="hidden" name="patientId" value="@patient.Id" />
+                                    <input type="hidden" name="actionType" value="Remove" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">&larr; Unlink</button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    }
+</div>

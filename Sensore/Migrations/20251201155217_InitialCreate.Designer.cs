@@ -12,7 +12,7 @@ using Sensore.Data;
 namespace Sensore.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251123211202_InitialCreate")]
+    [Migration("20251201155217_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -78,10 +78,12 @@ namespace Sensore.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -118,10 +120,12 @@ namespace Sensore.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
@@ -177,6 +181,10 @@ namespace Sensore.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
@@ -199,6 +207,10 @@ namespace Sensore.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("RoleType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -240,11 +252,11 @@ namespace Sensore.Migrations
 
             modelBuilder.Entity("Sensore.Models.Comment", b =>
                 {
-                    b.Property<long>("CommentId")
+                    b.Property<int>("CommentId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("CommentId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CommentId"));
 
                     b.Property<string>("AuthorUserId")
                         .IsRequired()
@@ -257,8 +269,8 @@ namespace Sensore.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long?>("ParentCommentId")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("ParentCommentId")
+                        .HasColumnType("int");
 
                     b.Property<string>("PatientUserId")
                         .IsRequired()
@@ -328,14 +340,14 @@ namespace Sensore.Migrations
                     b.Property<int>("PeakPressureIndex")
                         .HasColumnType("int");
 
-                    b.Property<string>("PressureData")
+                    b.Property<string>("PressureDataJson")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ZonalContactArea")
+                    b.Property<string>("ZonalContactAreaJson")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -400,13 +412,13 @@ namespace Sensore.Migrations
             modelBuilder.Entity("Sensore.Models.ClinicianPatientMap", b =>
                 {
                     b.HasOne("Sensore.Models.ApplicationUser", "ClinicianUser")
-                        .WithMany("PatientsAssigned")
+                        .WithMany("AssignedPatients")
                         .HasForeignKey("ClinicianUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Sensore.Models.ApplicationUser", "PatientUser")
-                        .WithMany("CliniciansAssigned")
+                        .WithMany("AssignedClinicians")
                         .HasForeignKey("PatientUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -426,11 +438,10 @@ namespace Sensore.Migrations
 
                     b.HasOne("Sensore.Models.Comment", "ParentComment")
                         .WithMany("Replies")
-                        .HasForeignKey("ParentCommentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ParentCommentId");
 
                     b.HasOne("Sensore.Models.ApplicationUser", "PatientUser")
-                        .WithMany("SubjectComments")
+                        .WithMany("ReceivedComments")
                         .HasForeignKey("PatientUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -466,18 +477,18 @@ namespace Sensore.Migrations
 
             modelBuilder.Entity("Sensore.Models.ApplicationUser", b =>
                 {
-                    b.Navigation("AuthoredComments");
+                    b.Navigation("AssignedClinicians");
 
-                    b.Navigation("CliniciansAssigned");
+                    b.Navigation("AssignedPatients");
+
+                    b.Navigation("AuthoredComments");
 
                     b.Navigation("PatientProfile")
                         .IsRequired();
 
-                    b.Navigation("PatientsAssigned");
-
                     b.Navigation("PressureFrames");
 
-                    b.Navigation("SubjectComments");
+                    b.Navigation("ReceivedComments");
                 });
 
             modelBuilder.Entity("Sensore.Models.Comment", b =>

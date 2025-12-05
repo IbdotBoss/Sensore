@@ -30,6 +30,8 @@ namespace Sensore.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RoleType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -96,8 +98,8 @@ namespace Sensore.Migrations
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    LoginProvider = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    ProviderKey = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
@@ -141,8 +143,8 @@ namespace Sensore.Migrations
                 columns: table => new
                 {
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    LoginProvider = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -184,14 +186,14 @@ namespace Sensore.Migrations
                 name: "Comments",
                 columns: table => new
                 {
-                    CommentId = table.Column<long>(type: "bigint", nullable: false)
+                    CommentId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    AuthorUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    PatientUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ThreadTimestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CommentText = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    AuthorUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    PatientUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ParentCommentId = table.Column<long>(type: "bigint", nullable: true)
+                    ParentCommentId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -212,8 +214,7 @@ namespace Sensore.Migrations
                         name: "FK_Comments_Comments_ParentCommentId",
                         column: x => x.ParentCommentId,
                         principalTable: "Comments",
-                        principalColumn: "CommentId",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "CommentId");
                 });
 
             migrationBuilder.CreateTable(
@@ -246,10 +247,10 @@ namespace Sensore.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PatientUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    PressureData = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ZonalContactArea = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PressureDataJson = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PeakPressureIndex = table.Column<int>(type: "int", nullable: false),
                     ContactAreaPercent = table.Column<double>(type: "float", nullable: false),
+                    ZonalContactAreaJson = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsAlertFlagged = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>

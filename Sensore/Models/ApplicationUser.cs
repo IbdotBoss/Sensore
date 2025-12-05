@@ -1,35 +1,34 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Sensore.Models
 {
-    /// <summary>
-    /// Extends the built-in IdentityUser with navigation properties
-    /// for our custom application tables.
-    /// </summary>
     public class ApplicationUser : IdentityUser
     {
-        // 1-to-1 relationship with PatientProfile
-        public virtual PatientProfile PatientProfile { get; set; }
+        [PersonalData]
+        public string FullName { get; set; }
 
-        // 1-to-many relationship with PressureFrame (a patient has many frames)
-        public virtual ICollection<PressureFrame> PressureFrames { get; set; }
+        // Helper to store "Admin", "Clinician", or "Patient" string
+        public string RoleType { get; set; }
 
-        // 1-to-many relationship with Comment (a user can author many comments)
+        // --- Navigation Properties ---
+
+        public PatientProfile PatientProfile { get; set; }
+
+        public ICollection<PressureFrame> PressureFrames { get; set; }
+
         [InverseProperty("AuthorUser")]
-        public virtual ICollection<Comment> AuthoredComments { get; set; }
+        public ICollection<Comment> AuthoredComments { get; set; }
 
-        // 1-to-many relationship with Comment (a patient can be the subject of many comments)
         [InverseProperty("PatientUser")]
-        public virtual ICollection<Comment> SubjectComments { get; set; }
+        public ICollection<Comment> ReceivedComments { get; set; }
 
-        // Many-to-many: Links to clinicians (if this user is a patient)
-        [InverseProperty("PatientUser")]
-        public virtual ICollection<ClinicianPatientMap> CliniciansAssigned { get; set; }
-
-        // Many-to-many: Links to patients (if this user is a clinician)
+        // Many-to-Many Relationships
         [InverseProperty("ClinicianUser")]
-        public virtual ICollection<ClinicianPatientMap> PatientsAssigned { get; set; }
+        public ICollection<ClinicianPatientMap> AssignedPatients { get; set; }
+
+        [InverseProperty("PatientUser")]
+        public ICollection<ClinicianPatientMap> AssignedClinicians { get; set; }
     }
 }

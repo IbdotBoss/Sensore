@@ -1,0 +1,418 @@
+﻿@model Sensore.Models.ClinicianPatientDetailViewModel
+@{
+    ViewData["Title"] = "Patient Detail";
+    var historyFrames = Model.History ?? new List<Sensore.Models.PressureFrame>();
+    var chartData = historyFrames.Select(h => new { t = h.Timestamp.ToString("HH:mm"), v = h.PeakPressureIndex });
+}
+
+<style>
+    body {
+        background-color: #0f0f1e;
+        color: #e0e0e0;
+    }
+
+    .dark-container {
+        background-color: #1e1e2d;
+        border-radius: 12px;
+        padding: 2rem;
+    }
+
+    .nav-tabs {
+        border-bottom: 2px solid #2a2a3e;
+    }
+
+    .nav-tabs .nav-link {
+        background-color: transparent;
+        border: none;
+        color: #a0a0b0;
+        padding: 1rem 2rem;
+        font-weight: 500;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: #e0e0e0;
+        border-color: transparent;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #4a7bff;
+        background-color: transparent;
+        border-bottom-color: #4a7bff;
+    }
+
+    .kpi-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+        margin-bottom: 1rem;
+    }
+
+    .kpi-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+
+    .kpi-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .alert-settings-btn {
+        background-color: #4a7bff;
+        color: white;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    .alert-settings-btn:hover {
+        background-color: #3a6bef;
+    }
+
+    /* Comment Thread Styling */
+    .chat-container {
+        max-height: 600px;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+
+    .chat-message {
+        margin-bottom: 1.5rem;
+        display: flex;
+    }
+
+    .chat-message.patient-message {
+        justify-content: flex-end;
+    }
+
+    .chat-message.clinician-message {
+        justify-content: flex-start;
+    }
+
+    .chat-bubble {
+        max-width: 70%;
+        padding: 1rem 1.25rem;
+        border-radius: 16px;
+        position: relative;
+    }
+
+    .chat-patient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+    .chat-clinician {
+        background-color: #2a2a3e;
+        color: #e0e0e0;
+        border-bottom-left-radius: 4px;
+    }
+
+    .chat-meta {
+        font-size: 0.75rem;
+        opacity: 0.8;
+        margin-top: 0.5rem;
+    }
+
+    .chat-input {
+        background-color: #2a2a3e;
+        border: 1px solid #3a3a4e;
+        border-radius: 8px;
+        padding: 1rem;
+        color: #e0e0e0;
+        resize: none;
+    }
+
+    .chat-input:focus {
+        outline: none;
+        border-color: #4a7bff;
+    }
+
+    .btn-send {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a asp-action="Index" class="text-muted text-decoration-none">
+                ← Back
+            </a>
+            <h2 class="text-white mt-2">Patient: @(Model.Patient.FullName ?? Model.Patient.UserName)</h2>
+        </div>
+        <button class="alert-settings-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
+            ⚙️ Alert Settings
+        </button>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="patientTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">
+                Dashboard
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button" role="tab">
+                Reports
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab">
+                Comment Thread
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="patientTabsContent">
+        <!-- Dashboard Tab -->
+        <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+            <div class="row">
+                <!-- Left: Heatmap -->
+                <div class="col-lg-8">
+                    <div class="dark-container mb-4">
+                        <h5 class="text-white mb-3">Live Pressure Map</h5>
+                        <canvas id="heatmapCanvas" width="512" height="512" style="border-radius: 8px; background-color: #0f0f1e;"></canvas>
+                        <div class="text-center text-muted small mt-2">
+                            Low Pressure (Blue) → High Pressure (Red)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: KPIs -->
+                <div class="col-lg-4">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Risk Score</div>
+                        <div class="kpi-value">
+                            @{
+                                var riskScore = Model.LatestFrame != null ? Math.Round((double)Model.LatestFrame.PeakPressureIndex / 25.5, 1) : 0;
+                            }
+                            @riskScore.ToString("F1")/10
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-label">Peak Pressure</div>
+                        <div class="kpi-value">@(Model.LatestFrame?.PeakPressureIndex ?? 0)</div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-label">Contact Area</div>
+                        <div class="kpi-value">@(Model.LatestFrame?.ContactAreaPercent.ToString("F1") ?? "0.0")%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pressure Trend Chart -->
+            <div class="dark-container mt-4">
+                <h5 class="text-white mb-3">Pressure Trend (Last 24h)</h5>
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div class="tab-pane fade" id="reports" role="tabpanel">
+            <div class="dark-container text-center" style="padding: 4rem;">
+                <h4 class="text-muted">Weekly Report</h4>
+                <p class="text-muted mt-3">Report view with historical data and trends would appear here.</p>
+            </div>
+        </div>
+
+        <!-- Comment Thread Tab -->
+        <div class="tab-pane fade" id="comments" role="tabpanel">
+            <div class="dark-container">
+                <h5 class="text-white mb-4">Communication Thread</h5>
+                
+                <div class="chat-container">
+                    @* Sample messages - replace with actual data *@
+                    <div class="chat-message patient-message">
+                        <div class="chat-bubble chat-patient">
+                            <div>I've been experiencing more discomfort in my heel area today. Should I be concerned?</div>
+                            <div class="chat-meta">Nov 15, 2025 at 10:30 AM</div>
+                        </div>
+                    </div>
+
+                    <div class="chat-message clinician-message">
+                        <div class="chat-bubble chat-clinician">
+                            <div>Thank you for letting me know. I can see the pressure spike in your readings. Please try to shift your weight more frequently and let me know if it persists.</div>
+                            <div class="chat-meta">
+                                <span class="badge bg-primary">Clinician</span>
+                                Nov 15, 2025 at 11:15 AM
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reply Form -->
+                <form asp-action="ReplyToComment" method="post" class="mt-4">
+                    <input type="hidden" name="patientId" value="@Model.Patient.Id" />
+                    <textarea name="commentText" class="form-control chat-input mb-3" rows="3" placeholder="Type your reply..." required></textarea>
+                    <button type="submit" class="btn btn-send">
+                        Send Reply
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background-color: #1e1e2d; color: #e0e0e0;">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title">Alert Configuration</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="UpdateSettings" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="profileId" value="@Model.Profile.ProfileId" />
+
+                    <div class="mb-3">
+                        <label class="form-label">High Pressure Threshold</label>
+                        <input type="number" name="highPressureThreshold" class="form-control" value="@Model.Profile.HighPressureThreshold" style="background-color: #2a2a3e; color: #e0e0e0; border-color: #3a3a4e;" />
+                        <small class="text-muted">Value (1-255) that triggers an alert.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Min Alert Area (Pixels)</label>
+                        <input type="number" name="minAlertArea" class="form-control" value="@Model.Profile.MinAlertArea" style="background-color: #2a2a3e; color: #e0e0e0; border-color: #3a3a4e;" />
+                        <small class="text-muted">Minimum blob size to ignore noise.</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-send">Update Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Data Injection -->
+<script id="heatmapData" type="application/json">
+    @Html.Raw(Model.LatestFrame?.PressureDataJson ?? "[]")
+</script>
+
+<script id="historyData" type="application/json">
+    @Html.Raw(Json.Serialize(chartData))
+</script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Heatmap Visualization
+        const canvas = document.getElementById('heatmapCanvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            const dataElement = document.getElementById('heatmapData');
+            let rawData = [];
+            
+            if (dataElement && dataElement.textContent) {
+                try {
+                    rawData = JSON.parse(dataElement.textContent);
+                } catch (e) {
+                    console.error("Failed to parse heatmap data", e);
+                }
+            }
+
+            const size = 32;
+            const cellSize = canvas.width / size;
+
+            if (rawData && rawData.length > 0) {
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        if (rawData[r] && typeof rawData[r][c] !== 'undefined') {
+                            const value = rawData[r][c];
+                            ctx.fillStyle = getColor(value);
+                            ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Trend Chart
+        const chartCtx = document.getElementById('trendChart');
+        if (chartCtx) {
+            const historyElement = document.getElementById('historyData');
+            let historyData = [];
+            
+            if (historyElement && historyElement.textContent) {
+                try {
+                    historyData = JSON.parse(historyElement.textContent);
+                } catch (e) {
+                    console.error("Failed to parse history data", e);
+                }
+            }
+
+            if (historyData) {
+                new Chart(chartCtx, {
+                    type: 'line',
+                    data: {
+                        labels: historyData.map(d => d.t),
+                        datasets: [{
+                            label: 'Peak Pressure',
+                            data: historyData.map(d => d.v),
+                            borderColor: '#ff5252',
+                            backgroundColor: 'rgba(255, 82, 82, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#e0e0e0' }
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true, 
+                                suggestedMax: 255,
+                                ticks: { color: '#a0a0b0' },
+                                grid: { color: '#2a2a3e' }
+                            },
+                            x: {
+                                ticks: { color: '#a0a0b0' },
+                                grid: { color: '#2a2a3e' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    });
+
+    function getColor(value) {
+        if (value < 10) return "#0f0f1e";
+        if (value < 85) {
+            const g = Math.floor((value / 85) * 255);
+            return "rgb(0, " + g + ", 255)";
+        } else if (value < 170) {
+            const b = 255 - Math.floor(((value - 85) / 85) * 255);
+            return "rgb(0, 255, " + b + ")";
+        } else {
+            const g = 255 - Math.floor(((value - 170) / 85) * 255);
+            return "rgb(255, " + g + ", 0)";
+        }
+    }
+</script>

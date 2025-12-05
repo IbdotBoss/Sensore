@@ -21,11 +21,16 @@ namespace Sensore.Areas.Identity.Pages.Account
     public class LoginModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(
+            SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUser> userManager,
+            ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
+            _userManager = userManager;
             _logger = logger;
         }
 
@@ -116,6 +121,40 @@ namespace Sensore.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+
+                    // Get the logged-in user
+                    var user = await _userManager.FindByEmailAsync(Input.Email);
+                    
+                    if (user != null)
+                    {
+                        // Get user roles
+                        var roles = await _userManager.GetRolesAsync(user);
+
+                        // Role-based redirection logic
+                        if (roles.Contains("Admin"))
+                        {
+                            _logger.LogInformation("Admin user redirected to Admin dashboard.");
+                            return RedirectToAction("Index", "Admin");
+                        }
+                        else if (roles.Contains("Clinician"))
+                        {
+                            _logger.LogInformation("Clinician user redirected to Clinician dashboard.");
+                            return RedirectToAction("Index", "Clinician");
+                        }
+                        else if (roles.Contains("Patient"))
+                        {
+                            _logger.LogInformation("Patient user redirected to Patient dashboard.");
+                            return RedirectToAction("Dashboard", "Patient");
+                        }
+                        else
+                        {
+                            // User has no recognized role, redirect to home
+                            _logger.LogWarning("User with no recognized role logged in. Redirecting to Home.");
+                            return RedirectToAction("Index", "Home");
+                        }
+                    }
+
+                    // Fallback if user is null (shouldn't happen)
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

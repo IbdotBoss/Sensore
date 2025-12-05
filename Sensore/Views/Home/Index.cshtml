@@ -1,8 +1,209 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Welcome to Sensore";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    body {
+        background-color: #0f0f1e;
+        color: #e0e0e0;
+    }
+
+    .hero-section {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .hero-content {
+        max-width: 800px;
+        padding: 2rem;
+    }
+
+    .hero-title {
+        font-size: 4rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.5rem;
+        color: #b0b0c0;
+        margin-bottom: 2rem;
+    }
+
+    .btn-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.2rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-decoration: none;
+        display: inline-block;
+        margin: 0.5rem;
+    }
+
+    .btn-hero:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        color: white;
+    }
+
+    .btn-hero-outline {
+        background: transparent;
+        border: 2px solid #667eea;
+        color: #667eea;
+    }
+
+    .btn-hero-outline:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: transparent;
+    }
+
+    .features {
+        padding: 4rem 0;
+    }
+
+    .feature-card {
+        background-color: #1e1e2d;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: transform 0.2s;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .feature-title {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .feature-description {
+        color: #b0b0c0;
+    }
+</style>
+
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">
+            <i class="bi bi-activity"></i> Sensore
+        </h1>
+        <p class="hero-subtitle">
+            Advanced Pressure Monitoring & Alert System
+        </p>
+        <p class="text-muted mb-4">
+            Real-time pressure sensing technology for healthcare monitoring and prevention
+        </p>
+        <div>
+            <a href="/Identity/Account/Login" class="btn-hero">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+            <a href="/Identity/Account/Register" class="btn-hero btn-hero-outline">
+                <i class="bi bi-person-plus"></i> Register
+            </a>
+        </div>
+    </div>
 </div>
+
+<div class="container features">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <h3 class="feature-title">Real-Time Monitoring</h3>
+                <p class="feature-description">
+                    Monitor pressure data in real-time with advanced heatmap visualization and instant alerts.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h3 class="feature-title">Intelligent Alerts</h3>
+                <p class="feature-description">
+                    Automated alert system with configurable thresholds to prevent pressure-related issues.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+                <h3 class="feature-title">Care Team Collaboration</h3>
+                <p class="feature-description">
+                    Seamless communication between patients and clinicians with integrated messaging.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-bar-chart-line"></i>
+                </div>
+                <h3 class="feature-title">Detailed Analytics</h3>
+                <p class="feature-description">
+                    Comprehensive reports and trend analysis to track patient progress over time.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-geo-alt"></i>
+                </div>
+                <h3 class="feature-title">Zonal Analysis</h3>
+                <p class="feature-description">
+                    Precise pressure mapping with 3x3 zonal breakdown for targeted interventions.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                </div>
+                <h3 class="feature-title">Cloud-Based</h3>
+                <p class="feature-description">
+                    Secure, cloud-based platform accessible anywhere, anytime from any device.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">

@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Sensore.Models
@@ -9,22 +8,23 @@ namespace Sensore.Models
         [Key]
         public long FrameId { get; set; }
 
-        [Required]
-        public string PatientUserId { get; set; } // Foreign Key
-
-        [ForeignKey("PatientUserId")]
-        public virtual ApplicationUser PatientUser { get; set; }
+        [ForeignKey("ApplicationUser")]
+        public string PatientUserId { get; set; }
+        public ApplicationUser PatientUser { get; set; }
 
         public DateTime Timestamp { get; set; }
 
-        [Column(TypeName = "nvarchar(max)")] // For JSON string
-        public string PressureData { get; set; }
+        // Stored as JSON string "[ [0,1,2...], [3,4,5...] ]"
+        public string PressureDataJson { get; set; }
 
-        [Column(TypeName = "nvarchar(max)")] // For JSON string
-        public string ZonalContactArea { get; set; }
-
+        // --- Metrics (Calculated on Ingestion) ---
         public int PeakPressureIndex { get; set; }
+
         public double ContactAreaPercent { get; set; }
+
+        // Stored as JSON "{ 'UpperRight': 20, 'LowerLeft': 15 }"
+        public string ZonalContactAreaJson { get; set; }
+
         public bool IsAlertFlagged { get; set; }
     }
 }

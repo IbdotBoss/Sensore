@@ -1,0 +1,269 @@
+﻿@model List<Sensore.Models.PatientListItemViewModel>
+@{
+    ViewData["Title"] = "My Patients";
+}
+
+<style>
+    body {
+        background-color: #0f0f1e;
+        color: #e0e0e0;
+    }
+
+    .dark-container {
+        background-color: #1e1e2d;
+        border-radius: 12px;
+        padding: 2rem;
+    }
+
+    .search-box {
+        background-color: #2a2a3e;
+        border: 1px solid #3a3a4e;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        color: #e0e0e0;
+        width: 300px;
+    }
+
+    .search-box:focus {
+        outline: none;
+        border-color: #4a7bff;
+    }
+
+    .patient-table {
+        background-color: #1e1e2d;
+        color: #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .patient-table thead {
+        background-color: #2a2a3e;
+    }
+
+    .patient-table th {
+        border: none;
+        padding: 1rem;
+        font-weight: 500;
+        color: #a0a0b0;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+
+    .patient-table td {
+        border: none;
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+    }
+
+    .patient-table tr {
+        border-bottom: 1px solid #2a2a3e;
+        transition: background-color 0.2s;
+    }
+
+    .patient-table tr:hover {
+        background-color: #252538;
+    }
+
+    .avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-right: 1rem;
+    }
+
+    .risk-high {
+        color: #ff5252;
+        font-weight: 600;
+    }
+
+    .risk-medium {
+        color: #ffa726;
+        font-weight: 600;
+    }
+
+    .risk-low {
+        color: #66bb6a;
+        font-weight: 600;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .status-alert {
+        background-color: rgba(255, 82, 82, 0.2);
+        color: #ff5252;
+    }
+
+    .status-stable {
+        background-color: rgba(102, 187, 106, 0.2);
+        color: #66bb6a;
+    }
+
+    .status-warning {
+        background-color: rgba(255, 167, 38, 0.2);
+        color: #ffa726;
+    }
+
+    .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+
+    .message-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .btn-view {
+        background-color: #4a7bff;
+        color: white;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+
+    .btn-view:hover {
+        background-color: #3a6bef;
+        color: white;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Header with Search -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white mb-0">My Patients</h2>
+        <form method="get" class="d-flex">
+            <input type="text" 
+                   name="searchString" 
+                   class="search-box" 
+                   placeholder="🔍 Search patients..." 
+                   value="@ViewBag.SearchString" />
+        </form>
+    </div>
+
+    <!-- Patient Table -->
+    <div class="dark-container">
+        <table class="patient-table table table-borderless">
+            <thead>
+                <tr>
+                    <th>PATIENT NAME</th>
+                    <th>RISK SCORE</th>
+                    <th>STATUS</th>
+                    <th>MESSAGES</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model == null || !Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-5">
+                            No patients assigned yet.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var patient in Model)
+                    {
+                        <tr>
+                            <!-- Patient Name with Avatar -->
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar">
+                                        @patient.Name.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">@patient.Name</div>
+                                        <div class="text-muted small">@patient.Email</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Risk Score -->
+                            <td>
+                                @{
+                                    var riskClass = patient.RiskScore >= 7 ? "risk-high" : 
+                                                   patient.RiskScore >= 4 ? "risk-medium" : "risk-low";
+                                }
+                                <span class="@riskClass fs-5">
+                                    @patient.RiskScore.ToString("F1")/10
+                                </span>
+                            </td>
+
+                            <!-- Status -->
+                            <td>
+                                @if (patient.HasActiveAlert)
+                                {
+                                    <span class="status-badge status-alert">
+                                        <span class="status-indicator" style="background-color: #ff5252;"></span>
+                                        Alert
+                                    </span>
+                                }
+                                else if (patient.RiskScore >= 5)
+                                {
+                                    <span class="status-badge status-warning">
+                                        <span class="status-indicator" style="background-color: #ffa726;"></span>
+                                        Warning
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-stable">
+                                        <span class="status-indicator" style="background-color: #66bb6a;"></span>
+                                        Stable
+                                    </span>
+                                }
+                            </td>
+
+                            <!-- Messages -->
+                            <td>
+                                @if (patient.MessageCount > 0)
+                                {
+                                    <span class="message-badge">@patient.MessageCount</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+
+                            <!-- Actions -->
+                            <td>
+                                <a asp-action="PatientDetail" asp-route-id="@patient.PatientId" class="btn btn-view">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -8,14 +8,13 @@ namespace Sensore.Models
         [Key]
         public int ProfileId { get; set; }
 
-        [Required]
-        public string PatientUserId { get; set; } // Foreign Key
+        [ForeignKey("ApplicationUser")]
+        public string PatientUserId { get; set; }
+        public ApplicationUser PatientUser { get; set; }
 
-        [ForeignKey("PatientUserId")]
-        public virtual ApplicationUser PatientUser { get; set; }
-
-        public int HighPressureThreshold { get; set; }
-        public int MinAlertArea { get; set; }
-        public int ContactThreshold { get; set; }
+        // Clinical Configuration
+        public int HighPressureThreshold { get; set; } = 150; // Configurable alert level
+        public int MinAlertArea { get; set; } = 10;           // Ignore blobs smaller than this
+        public int ContactThreshold { get; set; } = 3;        // Cutoff for "contact"
     }
 }
