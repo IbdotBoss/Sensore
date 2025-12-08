@@ -67,13 +67,54 @@
                     </div>
                 </div>
 
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="bi bi-check-circle"></i> Update User
+                <div class="mt-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle"></i> Update User
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary btn-lg ms-2">Cancel</a>
+                    </div>
+                    
+                    <!-- Delete Button -->
+                    <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="bi bi-trash"></i> Delete User
                     </button>
-                    <a asp-action="Index" class="btn btn-secondary btn-lg ms-2">Cancel</a>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background-color: #1e1e2d; color: #e0e0e0;">
+            <div class="modal-header border-bottom" style="border-color: #3a3a4e !important;">
+                <h5 class="modal-title text-white" id="deleteModalLabel">
+                    <i class="bi bi-exclamation-triangle text-danger"></i> Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-warning mb-3">
+                    <strong>Warning:</strong> This action cannot be undone!
+                </p>
+                <p class="mb-0">
+                    Are you sure you want to delete user <strong class="text-white">@Model.FullName</strong>?
+                </p>
+                <p class="text-muted small mt-2">
+                    This will also delete all associated data including pressure readings, comments, and profile information.
+                </p>
+            </div>
+            <div class="modal-footer border-top" style="border-color: #3a3a4e !important;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Yes, Delete
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>

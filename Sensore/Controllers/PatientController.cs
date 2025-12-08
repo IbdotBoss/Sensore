@@ -40,10 +40,13 @@ namespace Sensore.Controllers
                                             .OrderByDescending(f => f.Timestamp)
                                             .FirstOrDefaultAsync();
 
-            // 3. Get History (Last 24h for Graph)
+            // 3. Get History - Load latest 100 records regardless of time
+            // This fixes the empty chart issue when seeded data is from past dates
             var history = await _context.PressureFrames
-                                        .Where(f => f.PatientUserId == user.Id && f.Timestamp >= DateTime.UtcNow.AddHours(-24))
-                                        .OrderBy(f => f.Timestamp)
+                                        .Where(f => f.PatientUserId == user.Id)
+                                        .OrderByDescending(f => f.Timestamp)
+                                        .Take(100)
+                                        .OrderBy(f => f.Timestamp) // Re-order chronologically for chart
                                         .ToListAsync();
 
             // 4. Get Recent Comments (including clinician replies)
@@ -61,10 +64,10 @@ namespace Sensore.Controllers
 
             var viewModel = new PatientDashboardViewModel
             {
-                LatestFrame = latestFrame ?? new PressureFrame(), // Ensure non-null assignment
+                LatestFrame = latestFrame,
                 History = history,
                 Profile = profile,
-                UserName = user.FullName ?? user.UserName,
+                UserName = user.FullName ?? user.UserName ?? "User",
                 RecentComments = recentComments,
                 DailyComparisonReport = dailyReport
             };
@@ -77,7 +80,13 @@ namespace Sensore.Controllers
         public async Task<IActionResult> AddComment(string commentText)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (string.IsNullOrWhiteSpace(commentText)) return RedirectToAction("Dashboard");
+            if (user == null) return RedirectToAction("Dashboard");
+            
+            if (string.IsNullOrWhiteSpace(commentText)) 
+            {
+                TempData["ErrorMessage"] = "Comment text cannot be empty.";
+                return RedirectToAction("Dashboard");
+            }
 
             var comment = new Comment
             {

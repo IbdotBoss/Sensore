@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sensore.Models;
 using Sensore.Services;
+using System.Globalization;
 
 namespace Sensore.Data
 {
@@ -13,91 +14,218 @@ namespace Sensore.Data
             {
                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
-                // Ensure the DB is created
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+                var analysisService = scope.ServiceProvider.GetRequiredService<PressureAnalysisService>();
+                
                 context.Database.EnsureCreated();
 
-                // Check if we already have frames
-                if (context.PressureFrames.Any())
+                // Ensure roles exist
+                await EnsureRolesExist(roleManager);
+
+                // 1. Define the Mapping (Hex ID from Filename -> Target User)
+                var patientMap = new Dictionary<string, (string Name, string Email)>
                 {
-                    return; // DB has been seeded
+                    { "1c0fd777", ("Bruce Wayne", "bruce.wayne@sensore.com") },
+                    { "71e66ab3", ("Khalil Umar", "khalil.umar@sensore.com") },
+                    { "543d4676", ("Zarah Haroon", "zarah.haroon@sensore.com") },
+                    { "d13043b3", ("Vanessa Denvel", "vanessa.denvel@sensore.com") },
+                    { "de0e9b2c", ("Bona Saint", "bona.saint@sensore.com") }
+                };
+
+                // 2. Create Users & Profiles
+                Console.WriteLine("=== Creating Seed Patients ===");
+                foreach (var entry in patientMap)
+                {
+                    var hexId = entry.Key;
+                    var name = entry.Value.Name;
+                    var email = entry.Value.Email;
+
+                    var user = await userManager.FindByEmailAsync(email);
+                    if (user == null)
+                    {
+                        user = new ApplicationUser
+                        {
+                            UserName = email,
+                            Email = email,
+                            FullName = name,
+                            RoleType = "Patient",
+                            EmailConfirmed = true
+                        };
+                        
+                        var result = await userManager.CreateAsync(user, "Patient@123");
+                        if (result.Succeeded)
+                        {
+                            await userManager.AddToRoleAsync(user, "Patient");
+                            Console.WriteLine($"✓ Created patient: {name} ({email})");
+
+                            // Create Profile
+                            context.PatientProfiles.Add(new PatientProfile
+                            {
+                                PatientUserId = user.Id,
+                                HighPressureThreshold = 150,
+                                MinAlertArea = 10,
+                                ContactThreshold = 3
+                            });
+                            await context.SaveChangesAsync();
+                        }
+                        else
+                        {
+                            Console.WriteLine($"✗ Failed to create {name}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"○ Patient already exists: {name} ({email})");
+                    }
                 }
 
-                // --- Seed Logic ---
-                var analysisService = new PressureAnalysisService();
-                var csvService = new CsvIngestionService(analysisService);
-
-                // Find the main patient created by Member 1
-                var patient = await userManager.FindByEmailAsync("patient@sensore.com");
-                if (patient != null)
-                {
-                    // Define path to CSV (Member 2 needs to put a file here!)
-                    // In a real scenario, use IWebHostEnvironment to get the path
-                    string seedsDirectory = Path.Combine(AppContext.BaseDirectory, "Data", "Seeds");
-                    string csvPath = Path.Combine(seedsDirectory, "mock_data.csv");
-
-                    // Ensure directory exists
-                    if (!Directory.Exists(seedsDirectory)) Directory.CreateDirectory(seedsDirectory);
-
-                    // Create a realistic dummy CSV if it doesn't exist
-                    if (!File.Exists(csvPath))
-                    {
-                        CreateRealisticDummyCsv(csvPath);
-                    }
-
-                    // Run the Ingestion
-                    var frames = csvService.ParseCsv(csvPath, patient.Id, DateTime.UtcNow.AddHours(-1));
-
-                    if (frames.Any())
-                    {
-                        await context.PressureFrames.AddRangeAsync(frames);
-                        await context.SaveChangesAsync();
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Creates a realistic CSV file using Gaussian blobs to simulate human pressure distribution.
-        /// Generates data for multiple frames with breathing/movement simulation.
-        /// </summary>
-        private static void CreateRealisticDummyCsv(string path)
-        {
-            using (var writer = new StreamWriter(path))
-            {
-                // Generate 100 frames (simulates ~1.5 minutes of data if 1 frame = 1 second)
-                int numFrames = 100;
+                // 3. Process CSV Files
+                Console.WriteLine("\n=== Processing CSV Seed Files ===");
                 
-                for (int frameIndex = 0; frameIndex < numFrames; frameIndex++)
+                // Try multiple possible paths for the Seeds folder
+                var possiblePaths = new[]
                 {
-                    // Generate realistic human-shaped pressure distribution
-                    int[][] matrix = RealisticDataGenerator.GenerateHumanShape(frameIndex);
+                    Path.Combine(AppContext.BaseDirectory, "Data", "Seeds"),
+                    Path.Combine(Directory.GetCurrentDirectory(), "Data", "Seeds"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "Seeds")
+                };
 
-                    // Write all 32 rows for this frame
-                    for (int row = 0; row < 32; row++)
+                string? seedsDirectory = null;
+                foreach (var path in possiblePaths)
+                {
+                    if (Directory.Exists(path))
                     {
-                        var rowData = string.Join(",", matrix[row]);
-                        writer.WriteLine(rowData);
+                        seedsDirectory = path;
+                        break;
                     }
                 }
+
+                if (seedsDirectory == null)
+                {
+                    Console.WriteLine("⚠ Warning: Seeds directory not found. Tried paths:");
+                    foreach (var path in possiblePaths)
+                    {
+                        Console.WriteLine($"  - {path}");
+                    }
+                    Console.WriteLine("Skipping CSV file seeding.");
+                    return;
+                }
+
+                Console.WriteLine($"📁 Seeds directory: {seedsDirectory}");
+                
+                var csvFiles = Directory.GetFiles(seedsDirectory, "*.csv");
+                
+                if (csvFiles.Length == 0)
+                {
+                    Console.WriteLine("⚠ No CSV files found in Seeds directory.");
+                    return;
+                }
+
+                Console.WriteLine($"Found {csvFiles.Length} CSV file(s) to process.");
+
+                var csvService = new CsvIngestionService(analysisService);
+                int processedFiles = 0;
+                int skippedFiles = 0;
+                int errorFiles = 0;
+
+                foreach (var filePath in csvFiles)
+                {
+                    try
+                    {
+                        var fileName = Path.GetFileNameWithoutExtension(filePath); // e.g., "1c0fd777_20251011"
+                        var parts = fileName.Split('_');
+
+                        if (parts.Length == 2)
+                        {
+                            string hexId = parts[0].ToLower();
+                            string dateString = parts[1]; // "20251011"
+
+                            // Find the user for this file
+                            if (patientMap.ContainsKey(hexId))
+                            {
+                                var email = patientMap[hexId].Email;
+                                var user = await userManager.FindByEmailAsync(email);
+
+                                if (user != null)
+                                {
+                                    // Parse Date (YYYYMMDD)
+                                    if (DateTime.TryParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fileDate))
+                                    {
+                                        // Check if we already seeded this specific date for this user
+                                        bool alreadySeeded = await context.PressureFrames
+                                            .AnyAsync(f => f.PatientUserId == user.Id && f.Timestamp.Date == fileDate.Date);
+
+                                        if (!alreadySeeded)
+                                        {
+                                            Console.WriteLine($"  Processing: {Path.GetFileName(filePath)} for {patientMap[hexId].Name}...");
+                                            
+                                            var frames = csvService.ParseCsv(filePath, user.Id, fileDate);
+                                            
+                                            if (frames.Any())
+                                            {
+                                                await context.PressureFrames.AddRangeAsync(frames);
+                                                await context.SaveChangesAsync();
+                                                Console.WriteLine($"    ✓ Saved {frames.Count} frames");
+                                                processedFiles++;
+                                            }
+                                            else
+                                            {
+                                                Console.WriteLine($"    ⚠ No valid frames found in file");
+                                                skippedFiles++;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine($"  ○ Skipping {Path.GetFileName(filePath)} - already seeded for this date");
+                                            skippedFiles++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine($"  ✗ Invalid date format in filename: {fileName}");
+                                        errorFiles++;
+                                    }
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"  ✗ User not found for hex ID: {hexId}");
+                                    errorFiles++;
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine($"  ⚠ Unknown hex ID in filename: {hexId}");
+                                errorFiles++;
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"  ✗ Invalid filename format: {fileName} (expected: HexId_YYYYMMDD.csv)");
+                            errorFiles++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"  ✗ Error processing {Path.GetFileName(filePath)}: {ex.Message}");
+                        errorFiles++;
+                    }
+                }
+
+                Console.WriteLine($"\n=== Seeding Complete ===");
+                Console.WriteLine($"Processed: {processedFiles} | Skipped: {skippedFiles} | Errors: {errorFiles}");
             }
         }
 
-        /// <summary>
-        /// Legacy method: Creates random noise CSV (kept for reference).
-        /// Use CreateRealisticDummyCsv() instead for better visualization.
-        /// </summary>
-        [Obsolete("Use CreateRealisticDummyCsv() for realistic pressure data")]
-        private static void CreateDummyCsv(string path)
+        private static async Task EnsureRolesExist(RoleManager<ApplicationRole> roleManager)
         {
-            // Generates a random 32x32 CSV for testing if no file is provided
-            using (var writer = new StreamWriter(path))
+            string[] roleNames = { "Admin", "Clinician", "Patient" };
+            
+            foreach (var roleName in roleNames)
             {
-                var rnd = new Random();
-                for (int i = 0; i < 64; i++) // 2 Frames (32 rows * 2)
+                var roleExist = await roleManager.RoleExistsAsync(roleName);
+                if (!roleExist)
                 {
-                    var row = string.Join(",", Enumerable.Range(0, 32).Select(_ => rnd.Next(0, 256)));
-                    writer.WriteLine(row);
+                    await roleManager.CreateAsync(new ApplicationRole { Name = roleName });
                 }
             }
         }

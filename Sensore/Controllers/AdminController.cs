@@ -228,6 +228,91 @@ namespace Sensore.Controllers
             return View(model);
         }
 
+        // NEW: Delete User (POST)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "User not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Prevent deleting yourself
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.Id == user.Id)
+            {
+                TempData["ErrorMessage"] = "You cannot delete your own account.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                // Delete related data first
+                
+                // 1. Delete patient profile if exists
+                var profile = await _context.PatientProfiles
+                    .FirstOrDefaultAsync(p => p.PatientUserId == id);
+                if (profile != null)
+                {
+                    _context.PatientProfiles.Remove(profile);
+                }
+
+                // 2. Delete clinician-patient mappings
+                var clinicianMaps = await _context.ClinicianPatientMaps
+                    .Where(m => m.ClinicianUserId == id || m.PatientUserId == id)
+                    .ToListAsync();
+                if (clinicianMaps.Any())
+                {
+                    _context.ClinicianPatientMaps.RemoveRange(clinicianMaps);
+                }
+
+                // 3. Delete pressure frames (if patient)
+                var pressureFrames = await _context.PressureFrames
+                    .Where(f => f.PatientUserId == id)
+                    .ToListAsync();
+                if (pressureFrames.Any())
+                {
+                    _context.PressureFrames.RemoveRange(pressureFrames);
+                }
+
+                // 4. Delete comments
+                var comments = await _context.Comments
+                    .Where(c => c.AuthorUserId == id || c.PatientUserId == id)
+                    .ToListAsync();
+                if (comments.Any())
+                {
+                    _context.Comments.RemoveRange(comments);
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Finally, delete the user
+                var result = await _userManager.DeleteAsync(user);
+                if (result.Succeeded)
+                {
+                    TempData["SuccessMessage"] = $"User '{user.FullName}' deleted successfully.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = $"Error deleting user: {string.Join(", ", result.Errors.Select(e => e.Description))}";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error deleting user: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         // 6. Patient Linking UI
         public async Task<IActionResult> PatientLinking(string? clinicianId)
         {

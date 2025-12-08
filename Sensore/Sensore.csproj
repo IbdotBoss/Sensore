@@ -19,4 +19,13 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\Seeds\" />
+  </ItemGroup>
+
+  <!-- Add this ItemGroup to copy CSV files -->
+  <ItemGroup>
+    <None Include="Data\Seeds\*.csv" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

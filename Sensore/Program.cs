@@ -48,14 +48,29 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
+        Console.WriteLine("\n========================================");
+        Console.WriteLine("?? Starting Database Seeding Process...");
+        Console.WriteLine("========================================\n");
+
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
+        
+        // Initialize roles and admin user
         await Sensore.Data.DbInitializer.Initialize(services, userManager, roleManager);
+        
+        // Seed patient data from CSV files
+        await Sensore.Data.SeedData.Initialize(services);
+        
+        Console.WriteLine("\n========================================");
+        Console.WriteLine("? Database Seeding Completed!");
+        Console.WriteLine("========================================\n");
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
+        logger.LogError(ex, "? An error occurred while seeding the database.");
+        Console.WriteLine($"\n? Seeding Error: {ex.Message}");
+        Console.WriteLine($"Stack Trace: {ex.StackTrace}");
     }
 }
 
@@ -63,14 +78,13 @@ using (var scope = app.Services.CreateScope())
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseRouting();
 
-app.UseAuthentication(); // Add authentication middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
@@ -80,6 +94,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-app.MapRazorPages(); // Map Razor Pages for Identity UI
+app.MapRazorPages();
 
 app.Run();

@@ -275,7 +275,7 @@
                             <div style="height: 8px; background: linear-gradient(90deg, blue, cyan, yellow, red); border-radius: 4px;"></div>
                             <div class="d-flex justify-content-between text-muted small mt-1">
                                 <span>Low (0 mmHg)</span>
-                                <span>High (100+ mmHg)</span>
+                                <span>High (255 mmHg)</span>
                             </div>
                         </div>
                     </div>
@@ -311,7 +311,8 @@
                         <div class="kpi-label">Risk Score</div>
                         <div class="kpi-value risk-score">
                             @{
-                                var riskScore = Model.LatestFrame != null ? Math.Round((double)Model.LatestFrame.PeakPressureIndex / 25.5, 1) : 0;
+                                // Risk Score: Cap at 10 max, map 0-255 pressure to 0-10 scale
+                                var riskScore = Model.LatestFrame != null ? Math.Min(Math.Round((double)Model.LatestFrame.PeakPressureIndex / 25.5, 1), 10.0) : 0;
                             }
                             @riskScore.ToString("F1")<span class="fs-4 text-muted">/10</span>
                         </div>
@@ -366,6 +367,12 @@
                 <div class="chart-container">
                     <canvas id="pressureChart"></canvas>
                 </div>
+                @if (Model.History == null || !Model.History.Any())
+                {
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-info-circle"></i> No pressure history data available for the last 24 hours
+                    </div>
+                }
             </div>
 
             <!-- Comment History (if exists) -->
@@ -460,7 +467,9 @@
         <!-- Day-to-Day Comparison Chart -->
         <div class="report-container">
             <h5 class="text-white mb-4">Day-to-Day Comparison</h5>
-            <canvas id="weeklyComparisonChart" height="80"></canvas>
+            <div class="chart-container">
+                <canvas id="weeklyComparisonChart"></canvas>
+            </div>
         </div>
 
         <!-- Clinician Notes (Message Thread) -->
@@ -527,7 +536,7 @@
     function showReportView() {
         document.getElementById('dashboardView').style.display = 'none';
         document.getElementById('reportView').style.display = 'block';
-        initWeeklyChart();
+        setTimeout(initWeeklyChart, 100);
     }
 
     function showDashboardView() {
@@ -536,6 +545,8 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
+        console.log("Dashboard loaded");
+        
         // Heatmap Visualization
         const canvas = document.getElementById('heatmapCanvas');
         if (canvas) {
@@ -546,6 +557,7 @@
             if (dataElement && dataElement.textContent) {
                 try {
                     rawData = JSON.parse(dataElement.textContent);
+                    console.log("Heatmap data loaded:", rawData.length, "rows");
                 } catch (e) {
                     console.error("Failed to parse heatmap data", e);
                 }
@@ -576,6 +588,7 @@
             if (historyElement && historyElement.textContent) {
                 try {
                     historyData = JSON.parse(historyElement.textContent);
+                    console.log("History data loaded:", historyData.length, "points");
                 } catch (e) {
                     console.error("Failed to parse history data", e);
                 }
@@ -618,17 +631,50 @@
                         }
                     }
                 });
+            } else {
+                console.warn("No history data to display");
             }
         }
-
-        setTimeout(initWeeklyChart, 100);
     });
 
     // Weekly Comparison Chart for Report View
     let weeklyChart = null;
     function initWeeklyChart() {
+        const weeklyCtx = document.getElementById('weeklyComparisonChart');
         if (weeklyCtx && !weeklyChart) {
-            // Only create once
+            weeklyChart = new Chart(weeklyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Peak Pressure (mmHg)',
+                        data: [95, 102, 88, 110, 98, 92, 85],
+                        backgroundColor: '#667eea',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 3,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#e0e0e0' }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { color: '#a0a0b0' },
+                            grid: { color: '#2a2a3e' }
+                        },
+                        x: {
+                            ticks: { color: '#a0a0b0' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
         }
     }
 
