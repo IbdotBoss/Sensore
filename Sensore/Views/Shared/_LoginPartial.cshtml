@@ -1,55 +1,67 @@
-﻿@using Microsoft.AspNetCore.Identity
+﻿@* 
+    Login Partial View
+    Displays user greeting and logout button when authenticated.
+    Shows login link when not authenticated.
+    Included in the navbar of the main layout.
+*@
+
+@using Microsoft.AspNetCore.Identity
 @using Sensore.Models
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
 <ul class="navbar-nav">
+    @* Authenticated User View *@
     @if (SignInManager.IsSignedIn(User))
     {
         var currentUser = await UserManager.GetUserAsync(User);
         var displayName = currentUser?.FullName ?? currentUser?.Email ?? "User";
 
+    @* User Greeting Link *@
         <li class="nav-item">
-            <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
-                <i class="bi bi-person-circle"></i> Hello @displayName!
+      <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
+       <i class="bi bi-person-circle"></i> Hello @displayName!
             </a>
         </li>
-        <li class="nav-item">
+      @* Logout Button *@
+ <li class="nav-item">
             <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                <button type="submit" class="nav-link btn btn-link text-white">Logout</button>
+      <button type="submit" class="nav-link btn btn-link text-white">Logout</button>
             </form>
-        </li>
+      </li>
     }
     else
     {
-        <li class="nav-item">
-            <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Login">Login</a>
+        @* Login Link for Unauthenticated Users *@
+ <li class="nav-item">
+        <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Login">Login</a>
         </li>
     }
 </ul>
 
+@* Partial View Styles *@
 <style>
     .navbar-nav .nav-link {
-        color: #e0e0e0 !important;
+     color: #e0e0e0 !important;
         transition: color 0.2s;
-        font-weight: 500;
+ font-weight: 500;
     }
 
-        .navbar-nav .nav-link:hover {
-            color: #ffffff !important;
-        }
+    .navbar-nav .nav-link:hover {
+        color: #ffffff !important;
+    }
 
     .btn-link {
         text-decoration: none;
         padding: 0;
     }
 
-        .btn-link:hover {
-            text-decoration: underline;
-        }
+    .btn-link:hover {
+        text-decoration: underline;
+    }
 
-    .nav-item form {
+ .nav-item form {
         margin: 0;
     }
 

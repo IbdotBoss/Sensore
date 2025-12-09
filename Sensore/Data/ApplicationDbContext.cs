@@ -4,8 +4,9 @@ using Sensore.Models;
 
 namespace Sensore.Data
 {
-    // Generics are: <UserType, RoleType, KeyType>
-    // KeyType for default Identity is string
+    // Database context for the Sensore application.
+    // Extends IdentityDbContext to include ASP.NET Core Identity tables.
+    // Configures relationships between users, profiles, pressure data, and comments.
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -13,17 +14,34 @@ namespace Sensore.Data
         {
         }
 
+        // ========================================================================
+        // DbSets - Define tables in the database
+        // ========================================================================
+
+        // Patient profiles containing clinical settings and thresholds.
         public DbSet<PatientProfile> PatientProfiles { get; set; }
+
+        // Pressure sensor data frames from patient monitoring.
         public DbSet<PressureFrame> PressureFrames { get; set; }
+
+        // Comments for patient-clinician communication.
         public DbSet<Comment> Comments { get; set; }
+
+        // Mapping table for clinician-patient assignments.
         public DbSet<ClinicianPatientMap> ClinicianPatientMaps { get; set; }
 
+        // Configures entity relationships and constraints.
+        // Called when the model is being created.
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            // Initializes Identity tables
+            // Initialize Identity tables (Users, Roles, etc.)
             base.OnModelCreating(builder);
 
-            // 1. Configure Many-to-Many: Clinician <-> Patient
+            // ----------------------------------------------------------------
+            // CLINICIAN-PATIENT MANY-TO-MANY RELATIONSHIP
+            // A clinician can have multiple patients
+            // A patient can have multiple clinicians
+            // ----------------------------------------------------------------
             builder.Entity<ClinicianPatientMap>()
                 .HasKey(cpm => new { cpm.ClinicianUserId, cpm.PatientUserId });
 
@@ -31,7 +49,7 @@ namespace Sensore.Data
                 .HasOne(cpm => cpm.ClinicianUser)
                 .WithMany(u => u.AssignedPatients)
                 .HasForeignKey(cpm => cpm.ClinicianUserId)
-                .OnDelete(DeleteBehavior.Restrict); // Prevent cascading delete
+                .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
 
             builder.Entity<ClinicianPatientMap>()
                 .HasOne(cpm => cpm.PatientUser)
@@ -39,13 +57,20 @@ namespace Sensore.Data
                 .HasForeignKey(cpm => cpm.PatientUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // 2. Configure One-to-One: Patient <-> Profile
+            // ----------------------------------------------------------------
+            // PATIENT-PROFILE ONE-TO-ONE RELATIONSHIP
+            // Each patient has exactly one profile
+            // ----------------------------------------------------------------
             builder.Entity<ApplicationUser>()
                 .HasOne(u => u.PatientProfile)
                 .WithOne(p => p.PatientUser)
                 .HasForeignKey<PatientProfile>(p => p.PatientUserId);
 
-            // 3. Configure Comments
+            // ----------------------------------------------------------------
+            // COMMENT RELATIONSHIPS
+            // Comments have an author (who wrote it) and a patient (who it's about)
+            // Both use Restrict delete to prevent accidental data loss
+            // ----------------------------------------------------------------
             builder.Entity<Comment>()
                 .HasOne(c => c.AuthorUser)
                 .WithMany(u => u.AuthoredComments)

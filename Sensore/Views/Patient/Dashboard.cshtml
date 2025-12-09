@@ -1,56 +1,55 @@
-﻿@model Sensore.Models.PatientDashboardViewModel
+﻿@* 
+    Patient Dashboard Page
+    Main view for patients to see their pressure data and communicate with care team.
+    Shows heatmap, KPIs, trend chart, daily report, and comment history.
+*@
+
+@model Sensore.Models.PatientDashboardViewModel
 @{
     ViewData["Title"] = "My Dashboard";
 }
 
+@* Page Styling *@
 <style>
     body {
-        background-color: #0f0f1e;
+    background-color: #0f0f1e;
         color: #e0e0e0;
     }
 
     .dark-container {
         background-color: #1e1e2d;
         border-radius: 12px;
-        padding: 2rem;
-        margin-bottom: 1.5rem;
+ padding: 2rem;
+      margin-bottom: 1.5rem;
     }
 
     .kpi-card {
         background-color: #1e1e2d;
-        border-radius: 12px;
+ border-radius: 12px;
         padding: 1.5rem;
-        margin-bottom: 1rem;
-        text-align: center;
+   margin-bottom: 1rem;
+ text-align: center;
     }
 
     .kpi-value {
-        font-size: 2.5rem;
+ font-size: 2.5rem;
         font-weight: 700;
         margin: 0.5rem 0;
     }
 
-    .kpi-label {
-        font-size: 0.85rem;
+  .kpi-label {
+ font-size: 0.85rem;
         color: #8e8ea0;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
 
-    .risk-score {
-        color: #ffab40;
-    }
-
-    .peak-pressure {
-        color: #ff5252;
-    }
-
-    .contact-area {
-        color: #69f0ae;
-    }
+    .risk-score { color: #ffab40; }
+    .peak-pressure { color: #ff5252; }
+    .contact-area { color: #69f0ae; }
 
     .zone-card {
-        background-color: #2a2a3e;
+ background-color: #2a2a3e;
         border: 1px solid #3a3a4e;
         border-radius: 8px;
         padding: 1.25rem;
@@ -60,21 +59,21 @@
     .zone-label {
         font-size: 0.75rem;
         color: #8e8ea0;
-        text-transform: uppercase;
+    text-transform: uppercase;
         margin-bottom: 0.5rem;
     }
 
     .zone-value {
-        font-size: 1.5rem;
+     font-size: 1.5rem;
         font-weight: 700;
-        color: #ffffff;
+  color: #ffffff;
     }
 
     .feedback-section {
-        background-color: #1e1e2d;
+      background-color: #1e1e2d;
         border-radius: 12px;
         padding: 2rem;
-    }
+ }
 
     .feedback-textarea {
         background-color: #2a2a3e;
@@ -85,7 +84,7 @@
         resize: none;
         width: 100%;
         min-height: 150px;
-        font-size: 1rem;
+     font-size: 1rem;
     }
 
     .feedback-textarea:focus {
@@ -94,9 +93,7 @@
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
-    .feedback-textarea::placeholder {
-        color: #6c6c80;
-    }
+    .feedback-textarea::placeholder { color: #6c6c80; }
 
     .btn-submit-comment {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -104,11 +101,11 @@
         border: none;
         padding: 1rem 3rem;
         border-radius: 12px;
-        font-weight: 600;
+    font-weight: 600;
         font-size: 1.1rem;
         width: 100%;
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
+      transition: transform 0.2s, box-shadow 0.2s;
+}
 
     .btn-submit-comment:hover {
         transform: translateY(-2px);
@@ -116,53 +113,53 @@
     }
 
     .btn-reports {
-        background-color: transparent;
+     background-color: transparent;
         border: 2px solid #667eea;
         color: #667eea;
-        padding: 0.5rem 1.5rem;
-        border-radius: 8px;
+   padding: 0.5rem 1.5rem;
+border-radius: 8px;
         font-weight: 600;
         transition: all 0.2s;
     }
 
     .btn-reports:hover {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         border-color: transparent;
     }
 
     .simulate-alert-btn {
         background-color: #ff5252;
-        color: white;
+ color: white;
         border: none;
         padding: 0.5rem 1rem;
         border-radius: 8px;
         font-weight: 600;
     }
 
-    /* Report View Styles */
+/* Report View Styles */
     .report-container {
         background-color: #1e1e2d;
-        border-radius: 12px;
-        padding: 2rem;
+     border-radius: 12px;
+    padding: 2rem;
         margin-bottom: 1.5rem;
     }
 
     .report-summary-card {
-        background-color: #2a2a3e;
+   background-color: #2a2a3e;
         border-radius: 8px;
         padding: 1.5rem;
         text-align: center;
     }
 
     .report-summary-label {
-        font-size: 0.85rem;
+     font-size: 0.85rem;
         color: #8e8ea0;
         margin-bottom: 0.5rem;
     }
 
-    .report-summary-value {
-        font-size: 2rem;
+  .report-summary-value {
+    font-size: 2rem;
         font-weight: 700;
     }
 
@@ -181,16 +178,16 @@
     }
 
     .note-date {
-        font-size: 0.85rem;
+font-size: 0.85rem;
         color: #8e8ea0;
     }
 
-    /* Chat/Comments Styling */
+    /* Chat Styles */
     .chat-container {
         max-height: 500px;
         overflow-y: auto;
         padding: 1rem;
-        margin-bottom: 1rem;
+    margin-bottom: 1rem;
     }
 
     .chat-message {
@@ -198,20 +195,15 @@
         display: flex;
     }
 
-    .chat-message.patient-message {
-        justify-content: flex-end;
-    }
-
-    .chat-message.clinician-message {
-        justify-content: flex-start;
-    }
+    .chat-message.patient-message { justify-content: flex-end; }
+    .chat-message.clinician-message { justify-content: flex-start; }
 
     .chat-bubble {
-        max-width: 70%;
+  max-width: 70%;
         padding: 1rem 1.25rem;
-        border-radius: 16px;
+  border-radius: 16px;
         position: relative;
-    }
+  }
 
     .chat-patient {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -221,304 +213,319 @@
 
     .chat-clinician {
         background-color: #2a2a3e;
-        color: #e0e0e0;
-        border-bottom-left-radius: 4px;
+    color: #e0e0e0;
+      border-bottom-left-radius: 4px;
     }
 
     .chat-meta {
-        font-size: 0.75rem;
+    font-size: 0.75rem;
         opacity: 0.8;
         margin-top: 0.5rem;
     }
 
     .chart-container {
-        position: relative;
+    position: relative;
         height: 300px;
         width: 100%;
     }
 </style>
 
 <div class="container-fluid mt-4">
-    <!-- Header with Reports Button -->
+    @* Page Header with Reports Button *@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <a href="javascript:history.back()" class="text-muted text-decoration-none me-3">
-                <i class="bi bi-arrow-left"></i> Back
-            </a>
-            <h2 class="text-white d-inline-block mb-0">@Model.UserName</h2>
+    <a href="javascript:history.back()" class="text-muted text-decoration-none me-3">
+        <i class="bi bi-arrow-left"></i> Back
+      </a>
+    <h2 class="text-white d-inline-block mb-0">@Model.UserName</h2>
         </div>
-        <div>
-            <button onclick="showReportView()" class="btn btn-reports me-2">
-                <i class="bi bi-file-earmark-text"></i> Reports
+  <div>
+        @* Toggle to Report View *@
+  <button onclick="showReportView()" class="btn btn-reports me-2">
+    <i class="bi bi-file-earmark-text"></i> Reports
             </button>
-            <span class="badge bg-danger px-3 py-2">
-                <i class="bi bi-exclamation-triangle"></i> Simulate Alert
+     <span class="badge bg-danger px-3 py-2">
+     <i class="bi bi-exclamation-triangle"></i> Simulate Alert
             </span>
         </div>
     </div>
 
-    <!-- Dashboard View (Default) -->
+    @* Dashboard View (Default) *@
     <div id="dashboardView">
+     @* Empty State - No Data Yet *@
         @if (Model.LatestFrame == null)
-        {
+      {
             <div class="alert alert-info">No sensor data available yet.</div>
         }
-        else
+     else
         {
             <div class="row">
-                <!-- Left Column: Heatmap -->
-                <div class="col-lg-8">
-                    <div class="dark-container">
-                        <h5 class="text-white mb-3">Live Pressure Map</h5>
-                        <canvas id="heatmapCanvas" width="500" height="500" style="max-width: 100%; border: 1px solid #2a2a3e; background-color: #0f0f1e; border-radius: 8px;"></canvas>
-                        <div class="mt-3">
-                            <div style="height: 8px; background: linear-gradient(90deg, blue, cyan, yellow, red); border-radius: 4px;"></div>
-                            <div class="d-flex justify-content-between text-muted small mt-1">
-                                <span>Low (0 mmHg)</span>
-                                <span>High (255 mmHg)</span>
-                            </div>
-                        </div>
-                    </div>
+          @* Left Column: Heatmap and Zonal Data *@
+      <div class="col-lg-8">
+      @* Live Pressure Heatmap *@
+         <div class="dark-container">
+     <h5 class="text-white mb-3">Live Pressure Map</h5>
+      @* Heatmap Canvas - Rendered via JavaScript *@
+   <canvas id="heatmapCanvas" width="500" height="500" style="max-width: 100%; border: 1px solid #2a2a3e; background-color: #0f0f1e; border-radius: 8px;"></canvas>
+        @* Color Scale Legend *@
+                <div class="mt-3">
+          <div style="height: 8px; background: linear-gradient(90deg, blue, cyan, yellow, red); border-radius: 4px;"></div>
+                  <div class="d-flex justify-content-between text-muted small mt-1">
+               <span>Low (0 mmHg)</span>
+                 <span>High (255 mmHg)</span>
+        </div>
+      </div>
+           </div>
 
-                    <!-- Zonal Contact Area -->
-                    <div class="dark-container">
-                        <h5 class="text-white mb-3">Zonal Contact Area</h5>
-                        <div class="row g-3">
-                            @{
-                                var zones = new[] {
-                                    new { Name = "Upper Lateral", Val = 45 }, new { Name = "Upper Medial", Val = 52 }, new { Name = "Upper Lateral", Val = 48 },
-                                    new { Name = "Mid Lateral", Val = 68 }, new { Name = "Mid Center", Val = 89 }, new { Name = "Mid Lateral", Val = 71 },
-                                    new { Name = "Lower Lateral", Val = 95 }, new { Name = "Lower Medial", Val = 108 }, new { Name = "Lower Lateral", Val = 92 }
-                                };
-                            }
-                            @foreach (var zone in zones)
-                            {
-                                <div class="col-4">
-                                    <div class="zone-card">
-                                        <div class="zone-label">@zone.Name</div>
-                                        <div class="zone-value">@zone.Val <small class="text-muted">mmHg</small></div>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
+        @* Zonal Contact Area Grid *@
+      <div class="dark-container">
+     <h5 class="text-white mb-3">Zonal Contact Area</h5>
+  <div class="row g-3">
+    @* 3x3 Grid of Pressure Zones *@
+  @{
+  var zones = new[] {
+       new { Name = "Upper Lateral", Val = 45 }, new { Name = "Upper Medial", Val = 52 }, new { Name = "Upper Lateral", Val = 48 },
+          new { Name = "Mid Lateral", Val = 68 }, new { Name = "Mid Center", Val = 89 }, new { Name = "Mid Lateral", Val = 71 },
+           new { Name = "Lower Lateral", Val = 95 }, new { Name = "Lower Medial", Val = 108 }, new { Name = "Lower Lateral", Val = 92 }
+   };
+                  }
+  @foreach (var zone in zones)
+{
+       <div class="col-4">
+                 <div class="zone-card">
+           <div class="zone-label">@zone.Name</div>
+      <div class="zone-value">@zone.Val <small class="text-muted">mmHg</small></div>
                 </div>
+          </div>
+         }
+  </div>
+         </div>
+       </div>
 
-                <!-- Right Column: KPIs & Feedback -->
-                <div class="col-lg-4">
-                    <!-- Risk Score -->
-                    <div class="kpi-card">
-                        <div class="kpi-label">Risk Score</div>
-                        <div class="kpi-value risk-score">
-                            @{
-                                // Risk Score: Cap at 10 max, map 0-255 pressure to 0-10 scale
-                                var riskScore = Model.LatestFrame != null ? Math.Min(Math.Round((double)Model.LatestFrame.PeakPressureIndex / 25.5, 1), 10.0) : 0;
-                            }
-                            @riskScore.ToString("F1")<span class="fs-4 text-muted">/10</span>
-                        </div>
-                    </div>
-
-                    <!-- Peak Pressure -->
-                    <div class="kpi-card">
-                        <div class="kpi-label">Peak Pressure</div>
-                        <div class="kpi-value peak-pressure">
-                            @Model.LatestFrame.PeakPressureIndex <span class="fs-4 text-muted">mmHg</span>
-                        </div>
-                    </div>
-
-                    <!-- Contact Area -->
-                    <div class="kpi-card">
-                        <div class="kpi-label">Total Contact Area</div>
-                        <div class="kpi-value contact-area">
-                            @Model.LatestFrame.ContactAreaPercent.ToString("F0")<span class="fs-4 text-muted">%</span>
-                        </div>
-                    </div>
-
-                    <!-- Send Feedback Section -->
-                    <div class="feedback-section">
-                        <h5 class="text-white mb-3">
-                            <i class="bi bi-send"></i> Send Feedback
-                        </h5>
-                        
-                        <form asp-action="AddComment" method="post">
-                            <textarea name="commentText" 
-                                      class="feedback-textarea mb-3" 
-                                      placeholder="Write a comment for your clinician..." 
-                                      required></textarea>
-                            
-                            <button type="submit" class="btn btn-submit-comment">
-                                Submit Comment
-                            </button>
-                        </form>
-                    </div>
-                </div>
+         @* Right Column: KPIs and Feedback Form *@
+            <div class="col-lg-4">
+           @* Risk Score KPI *@
+      <div class="kpi-card">
+<div class="kpi-label">Risk Score</div>
+ <div class="kpi-value risk-score">
+          @{
+   var riskScore = Model.LatestFrame != null ? Math.Min(Math.Round((double)Model.LatestFrame.PeakPressureIndex / 25.5, 1), 10.0) : 0;
+          }
+      @riskScore.ToString("F1")<span class="fs-4 text-muted">/10</span>
             </div>
+             </div>
 
-            <!-- Peak Pressure Over Time Chart -->
-            <div class="dark-container mt-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="text-white mb-0">Peak Pressure Over Time</h5>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-light active">1h</button>
-                        <button class="btn btn-outline-secondary">6h</button>
-                        <button class="btn btn-outline-secondary">24h</button>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="pressureChart"></canvas>
-                </div>
-                @if (Model.History == null || !Model.History.Any())
-                {
-                    <div class="text-center text-muted py-4">
-                        <i class="bi bi-info-circle"></i> No pressure history data available for the last 24 hours
-                    </div>
-                }
-            </div>
+@* Peak Pressure KPI *@
+    <div class="kpi-card">
+   <div class="kpi-label">Peak Pressure</div>
+             <div class="kpi-value peak-pressure">
+       @Model.LatestFrame.PeakPressureIndex <span class="fs-4 text-muted">mmHg</span>
+     </div>
+         </div>
 
-            <!-- Comment History (if exists) -->
-            @if (Model.RecentComments != null && Model.RecentComments.Any())
-            {
-                <div class="dark-container">
-                    <h5 class="text-white mb-3">
-                        <i class="bi bi-chat-dots"></i> Communication History
-                    </h5>
-                    
-                    <div class="chat-container">
-                        @foreach (var comment in Model.RecentComments)
-                        {
-                            <div class="chat-message patient-message">
-                                <div class="chat-bubble chat-patient">
-                                    <div>@comment.CommentText</div>
-                                    <div class="chat-meta">
-                                        You - @comment.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")
-                                    </div>
-                                </div>
-                            </div>
+        @* Contact Area KPI *@
+     <div class="kpi-card">
+       <div class="kpi-label">Total Contact Area</div>
+           <div class="kpi-value contact-area">
+     @Model.LatestFrame.ContactAreaPercent.ToString("F0")<span class="fs-4 text-muted">%</span>
+        </div>
+          </div>
 
-                            @if (comment.Replies != null && comment.Replies.Any())
-                            {
-                                @foreach (var reply in comment.Replies.OrderBy(r => r.CreatedAt))
-                                {
-                                    <div class="chat-message clinician-message">
-                                        <div class="chat-bubble chat-clinician">
-                                            <div>@reply.CommentText</div>
-                                            <div class="chat-meta">
-                                                <span class="badge bg-primary">Clinician</span>
-                                                @(reply.AuthorUser?.FullName ?? "Clinician") - @reply.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            }
-                        }
-                    </div>
-                </div>
-            }
-        }
+          @* Send Feedback Form *@
+          <div class="feedback-section">
+           <h5 class="text-white mb-3">
+         <i class="bi bi-send"></i> Send Feedback
+        </h5>
+
+       <form asp-action="AddComment" method="post">
+       <textarea name="commentText" 
+            class="feedback-textarea mb-3" 
+        placeholder="Write a comment for your clinician..." 
+         required></textarea>
+     
+               <button type="submit" class="btn btn-submit-comment">
+                Submit Comment
+   </button>
+       </form>
+  </div>
+   </div>
     </div>
 
-    <!-- Report View (Hidden by default) -->
+@* Peak Pressure Trend Chart *@
+   <div class="dark-container mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+         <h5 class="text-white mb-0">Peak Pressure Over Time</h5>
+            @* Time Range Buttons *@
+            <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-light active">1h</button>
+        <button class="btn btn-outline-secondary">6h</button>
+     <button class="btn btn-outline-secondary">24h</button>
+           </div>
+        </div>
+       <div class="chart-container">
+  <canvas id="pressureChart"></canvas>
+                </div>
+       @* Empty State for Chart *@
+       @if (Model.History == null || !Model.History.Any())
+   {
+        <div class="text-center text-muted py-4">
+       <i class="bi bi-info-circle"></i> No pressure history data available for the last 24 hours
+             </div>
+           }
+            </div>
+
+    @* Comment History Section *@
+            @if (Model.RecentComments != null && Model.RecentComments.Any())
+    {
+      <div class="dark-container">
+      <h5 class="text-white mb-3">
+            <i class="bi bi-chat-dots"></i> Communication History
+  </h5>
+           
+     <div class="chat-container">
+               @* Loop through comments and their replies *@
+      @foreach (var comment in Model.RecentComments)
+        {
+ @* Patient's Comment *@
+                <div class="chat-message patient-message">
+  <div class="chat-bubble chat-patient">
+    <div>@comment.CommentText</div>
+     <div class="chat-meta">
+    You - @comment.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")
+       </div>
+       </div>
+   </div>
+
+      @* Clinician Replies *@
+                @if (comment.Replies != null && comment.Replies.Any())
+ {
+            @foreach (var reply in comment.Replies.OrderBy(r => r.CreatedAt))
+{
+         <div class="chat-message clinician-message">
+      <div class="chat-bubble chat-clinician">
+    <div>@reply.CommentText</div>
+      <div class="chat-meta">
+             <span class="badge bg-primary">Clinician</span>
+   @(reply.AuthorUser?.FullName ?? "Clinician") - @reply.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")
+         </div>
+       </div>
+          </div>
+        }
+        }
+                    }
+ </div>
+    </div>
+   }
+   }
+    </div>
+
+    @* Report View (Hidden by default) *@
     <div id="reportView" style="display: none;">
         <h2 class="text-white mb-4">My Weekly Report</h2>
 
-        <!-- Summary Section -->
+        @* Summary Statistics *@
         <div class="report-container">
-            <h5 class="text-white mb-4">Summary</h5>
+       <h5 class="text-white mb-4">Summary</h5>
             <div class="row g-3">
-                <div class="col-md-4">
-                    <div class="report-summary-card">
-                        <div class="report-summary-label">Avg. Peak Pressure</div>
-                        <div class="report-summary-value text-danger">
-                            @{
-                                var avgPressure = Model.History != null && Model.History.Any() ? 
-                                    Model.History.Average(h => h.PeakPressureIndex) : 0;
-                            }
-                            @avgPressure.ToString("F0") mmHg
-                        </div>
+          @* Average Peak Pressure *@
+       <div class="col-md-4">
+       <div class="report-summary-card">
+   <div class="report-summary-label">Avg. Peak Pressure</div>
+            <div class="report-summary-value text-danger">
+            @{
+       var avgPressure = Model.History != null && Model.History.Any() ? 
+            Model.History.Average(h => h.PeakPressureIndex) : 0;
+      }
+       @avgPressure.ToString("F0") mmHg
+      </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="report-summary-card">
-                        <div class="report-summary-label">Avg. Contact Area</div>
-                        <div class="report-summary-value text-success">
-                            @{
-                                var avgContact = Model.History != null && Model.History.Any() ? 
-                                    Model.History.Average(h => h.ContactAreaPercent) : 0;
-                            }
-                            @avgContact.ToString("F0")%
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="report-summary-card">
-                        <div class="report-summary-label">Total Alerts this Week</div>
-                        <div class="report-summary-value text-warning">
-                            @{
-                                var alertCount = Model.History != null ? 
-                                    Model.History.Count(h => h.IsAlertFlagged) : 0;
-                            }
-                            @alertCount
-                        </div>
-                    </div>
-                </div>
+ </div>
+                @* Average Contact Area *@
+             <div class="col-md-4">
+           <div class="report-summary-card">
+ <div class="report-summary-label">Avg. Contact Area</div>
+   <div class="report-summary-value text-success">
+    @{
+ var avgContact = Model.History != null && Model.History.Any() ? 
+       Model.History.Average(h => h.ContactAreaPercent) : 0;
+          }
+      @avgContact.ToString("F0")%
             </div>
+           </div>
+              </div>
+     @* Alert Count *@
+    <div class="col-md-4">
+         <div class="report-summary-card">
+            <div class="report-summary-label">Total Alerts this Week</div>
+     <div class="report-summary-value text-warning">
+       @{
+           var alertCount = Model.History != null ? 
+       Model.History.Count(h => h.IsAlertFlagged) : 0;
+   }
+       @alertCount
+   </div>
+</div>
+        </div>
+        </div>
         </div>
 
-        <!-- Day-to-Day Comparison Chart -->
+        @* Weekly Comparison Chart *@
         <div class="report-container">
-            <h5 class="text-white mb-4">Day-to-Day Comparison</h5>
+   <h5 class="text-white mb-4">Day-to-Day Comparison</h5>
             <div class="chart-container">
-                <canvas id="weeklyComparisonChart"></canvas>
-            </div>
-        </div>
+          <canvas id="weeklyComparisonChart"></canvas>
+   </div>
+  </div>
 
-        <!-- Clinician Notes (Message Thread) -->
-        <div class="report-container">
-            <h5 class="text-white mb-4">Clinician Notes</h5>
-            
+        @* Clinician Notes Section *@
+  <div class="report-container">
+  <h5 class="text-white mb-4">Clinician Notes</h5>
+   
             @if (Model.RecentComments != null && Model.RecentComments.Any())
             {
-                @* Show only clinician replies (comments from clinicians) *@
-                @foreach (var comment in Model.RecentComments)
+             @* Show clinician replies *@
+ @foreach (var comment in Model.RecentComments)
                 {
-                    @if (comment.Replies != null && comment.Replies.Any())
-                    {
-                        @foreach (var reply in comment.Replies.OrderByDescending(r => r.CreatedAt))
-                        {
-                            <div class="clinician-note">
-                                <div class="clinician-name">
-                                    <i class="bi bi-person-badge"></i> @(reply.AuthorUser?.FullName ?? "Dr. Clinician")
-                                </div>
-                                <p class="mb-2">
-                                    @reply.CommentText
-                                </p>
-                                <div class="note-date">@reply.CreatedAt.ToString("MMM dd, yyyy")</div>
-                            </div>
-                        }
-                    }
-                }
-            }
+      @if (comment.Replies != null && comment.Replies.Any())
+        {
+   @foreach (var reply in comment.Replies.OrderByDescending(r => r.CreatedAt))
+      {
+      <div class="clinician-note">
+        <div class="clinician-name">
+    <i class="bi bi-person-badge"></i> @(reply.AuthorUser?.FullName ?? "Dr. Clinician")
+           </div>
+        <p class="mb-2">
+          @reply.CommentText
+     </p>
+<div class="note-date">@reply.CreatedAt.ToString("MMM dd, yyyy")</div>
+          </div>
+      }
+          }
+    }
+   }
             else
-            {
-                <div class="clinician-note">
-                    <div class="clinician-name">
-                        <i class="bi bi-person-badge"></i> Your Care Team
-                    </div>
-                    <p class="mb-2">
-                        No clinician notes yet. Your care team will post updates here as they review your progress.
-                    </p>
-                    <div class="note-date">@DateTime.Now.ToString("MMM dd, yyyy")</div>
-                </div>
+ {
+        @* Empty State *@
+         <div class="clinician-note">
+<div class="clinician-name">
+               <i class="bi bi-person-badge"></i> Your Care Team
+  </div>
+          <p class="mb-2">
+      No clinician notes yet. Your care team will post updates here as they review your progress.
+ </p>
+           <div class="note-date">@DateTime.Now.ToString("MMM dd, yyyy")</div>
+  </div>
             }
         </div>
 
+@* Back to Dashboard Button *@
         <button onclick="showDashboardView()" class="btn btn-outline-light">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
-        </button>
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </button>
     </div>
 </div>
 
-<!-- Data Injection -->
+@* Data Injection for JavaScript *@
 <script id="heatmapData" type="application/json">
     @Html.Raw(Model.LatestFrame?.PressureDataJson ?? "[]")
 </script>
@@ -527,114 +534,116 @@
     @Html.Raw(Model.History != null && Model.History.Any() ? Json.Serialize(Model.History.Select(h => new { t = h.Timestamp.ToString("HH:mm"), v = h.PeakPressureIndex })) : "[]")
 </script>
 
-<!-- Chart.js -->
+@* Chart.js Library and Bootstrap Icons *@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
+@* JavaScript for View Toggle, Heatmap, and Charts *@
 <script>
     // Toggle between Dashboard and Report views
     function showReportView() {
         document.getElementById('dashboardView').style.display = 'none';
-        document.getElementById('reportView').style.display = 'block';
+   document.getElementById('reportView').style.display = 'block';
         setTimeout(initWeeklyChart, 100);
     }
 
     function showDashboardView() {
-        document.getElementById('dashboardView').style.display = 'block';
-        document.getElementById('reportView').style.display = 'none';
+ document.getElementById('dashboardView').style.display = 'block';
+    document.getElementById('reportView').style.display = 'none';
     }
 
     document.addEventListener("DOMContentLoaded", function () {
         console.log("Dashboard loaded");
         
-        // Heatmap Visualization
+   // Heatmap Visualization
         const canvas = document.getElementById('heatmapCanvas');
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
+   if (canvas) {
+      const ctx = canvas.getContext('2d');
             const dataElement = document.getElementById('heatmapData');
             let rawData = [];
-            
-            if (dataElement && dataElement.textContent) {
-                try {
-                    rawData = JSON.parse(dataElement.textContent);
-                    console.log("Heatmap data loaded:", rawData.length, "rows");
-                } catch (e) {
-                    console.error("Failed to parse heatmap data", e);
+   
+          if (dataElement && dataElement.textContent) {
+     try {
+            rawData = JSON.parse(dataElement.textContent);
+      console.log("Heatmap data loaded:", rawData.length, "rows");
+       } catch (e) {
+   console.error("Failed to parse heatmap data", e);
                 }
             }
 
-            const size = 32;
-            const cellSize = canvas.width / size;
+       const size = 32;
+     const cellSize = canvas.width / size;
 
-            if (rawData && rawData.length > 0) {
-                for (let r = 0; r < size; r++) {
-                    for (let c = 0; c < size; c++) {
-                        if (rawData[r] && typeof rawData[r][c] !== 'undefined') {
-                            const value = rawData[r][c];
-                            ctx.fillStyle = getColor(value);
-                            ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
-                        }
-                    }
-                }
+            // Render each cell of the 32x32 matrix
+       if (rawData && rawData.length > 0) {
+    for (let r = 0; r < size; r++) {
+         for (let c = 0; c < size; c++) {
+       if (rawData[r] && typeof rawData[r][c] !== 'undefined') {
+       const value = rawData[r][c];
+         ctx.fillStyle = getColor(value);
+ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+         }
+    }
+            }
             }
         }
 
-        // Pressure Chart
-        const chartCtx = document.getElementById('pressureChart');
-        if (chartCtx) {
-            const historyElement = document.getElementById('historyData');
+        // Pressure Trend Chart
+   const chartCtx = document.getElementById('pressureChart');
+    if (chartCtx) {
+  const historyElement = document.getElementById('historyData');
             let historyData = [];
-            
-            if (historyElement && historyElement.textContent) {
-                try {
-                    historyData = JSON.parse(historyElement.textContent);
-                    console.log("History data loaded:", historyData.length, "points");
-                } catch (e) {
-                    console.error("Failed to parse history data", e);
-                }
-            }
+  
+        if (historyElement && historyElement.textContent) {
+    try {
+     historyData = JSON.parse(historyElement.textContent);
+          console.log("History data loaded:", historyData.length, "points");
+    } catch (e) {
+    console.error("Failed to parse history data", e);
+       }
+          }
 
-            if (historyData && historyData.length > 0) {
-                new Chart(chartCtx, {
-                    type: 'line',
-                    data: {
-                        labels: historyData.map(d => d.t),
-                        datasets: [{
-                            label: 'Peak Pressure (mmHg)',
-                            data: historyData.map(d => d.v),
-                            borderColor: '#667eea',
-                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                            tension: 0.3,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        aspectRatio: 3,
-                        plugins: {
-                            legend: {
-                                labels: { color: '#e0e0e0' }
-                            }
-                        },
-                        scales: {
-                            y: { 
-                                beginAtZero: true, 
-                                suggestedMax: 255,
-                                ticks: { color: '#a0a0b0' },
-                                grid: { color: '#2a2a3e' }
-                            },
-                            x: {
-                                ticks: { color: '#a0a0b0' },
-                                grid: { color: '#2a2a3e' }
-                            }
-                        }
-                    }
-                });
-            } else {
-                console.warn("No history data to display");
-            }
-        }
+   if (historyData && historyData.length > 0) {
+    new Chart(chartCtx, {
+            type: 'line',
+      data: {
+             labels: historyData.map(d => d.t),
+     datasets: [{
+           label: 'Peak Pressure (mmHg)',
+    data: historyData.map(d => d.v),
+              borderColor: '#667eea',
+     backgroundColor: 'rgba(102, 126, 234, 0.1)',
+         tension: 0.3,
+       fill: true
+           }]
+        },
+          options: {
+           responsive: true,
+ maintainAspectRatio: true,
+       aspectRatio: 3,
+      plugins: {
+               legend: {
+         labels: { color: '#e0e0e0' }
+  }
+                 },
+             scales: {
+                 y: { 
+                beginAtZero: true, 
+ suggestedMax: 255,
+       ticks: { color: '#a0a0b0' },
+    grid: { color: '#2a2a3e' }
+           },
+         x: {
+      ticks: { color: '#a0a0b0' },
+       grid: { color: '#2a2a3e' }
+          }
+               }
+   }
+          });
+          } else {
+          console.warn("No history data to display");
+     }
+    }
     });
 
     // Weekly Comparison Chart for Report View
@@ -642,53 +651,54 @@
     function initWeeklyChart() {
         const weeklyCtx = document.getElementById('weeklyComparisonChart');
         if (weeklyCtx && !weeklyChart) {
-            weeklyChart = new Chart(weeklyCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{
-                        label: 'Peak Pressure (mmHg)',
-                        data: [95, 102, 88, 110, 98, 92, 85],
-                        backgroundColor: '#667eea',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    aspectRatio: 3,
-                    plugins: {
-                        legend: {
-                            labels: { color: '#e0e0e0' }
-                        }
-                    },
-                    scales: {
-                        y: { 
-                            beginAtZero: true,
-                            ticks: { color: '#a0a0b0' },
-                            grid: { color: '#2a2a3e' }
-                        },
-                        x: {
-                            ticks: { color: '#a0a0b0' },
-                            grid: { display: false }
-                        }
-                    }
-                }
-            });
+     weeklyChart = new Chart(weeklyCtx, {
+       type: 'bar',
+           data: {
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{
+             label: 'Peak Pressure (mmHg)',
+              data: [95, 102, 88, 110, 98, 92, 85],
+        backgroundColor: '#667eea',
+  borderRadius: 8
+   }]
+           },
+        options: {
+          responsive: true,
+maintainAspectRatio: true,
+ aspectRatio: 3,
+          plugins: {
+            legend: {
+         labels: { color: '#e0e0e0' }
+           }
+          },
+        scales: {
+       y: { 
+  beginAtZero: true,
+       ticks: { color: '#a0a0b0' },
+          grid: { color: '#2a2a3e' }
+  },
+             x: {
+                ticks: { color: '#a0a0b0' },
+      grid: { display: false }
+   }
+        }
+     }
+    });
         }
     }
 
+    // Color mapping function for heatmap (blue -> cyan -> yellow -> red)
     function getColor(value) {
         if (value < 10) return "#0f0f1e";
         if (value < 85) {
-            const g = Math.floor((value / 85) * 255);
+  const g = Math.floor((value / 85) * 255);
             return "rgb(0, " + g + ", 255)";
-        } else if (value < 170) {
-            const b = 255 - Math.floor(((value - 85) / 85) * 255);
+   } else if (value < 170) {
+ const b = 255 - Math.floor(((value - 85) / 85) * 255);
             return "rgb(0, 255, " + b + ")";
         } else {
-            const g = 255 - Math.floor(((value - 170) / 85) * 255);
-            return "rgb(255, " + g + ", 0)";
-        }
+     const g = 255 - Math.floor(((value - 170) / 85) * 255);
+      return "rgb(255, " + g + ", 0)";
+   }
     }
 </script>

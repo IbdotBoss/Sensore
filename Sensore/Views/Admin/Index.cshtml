@@ -1,9 +1,16 @@
-﻿@model List<Sensore.Models.UserListViewModel>
+﻿@* 
+    Admin User Management Page
+    Displays a list of all users in the system with their roles.
+    Allows admins to create, edit, and manage patient-clinician assignments.
+*@
+
+@model List<Sensore.Models.UserListViewModel>
 @{
-    ViewData["Title"] = "User Management";
+ ViewData["Title"] = "User Management";
 }
 
 <div class="container mt-4">
+    @* Page Header with Create Button *@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold text-white">User Management</h2>
         <a asp-action="Create" class="btn btn-primary">
@@ -11,77 +18,86 @@
         </a>
     </div>
 
+    @* Success Message Alert *@
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+   <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+     </div>
     }
 
-    @if (TempData["ErrorMessage"] != null)
+    @* Error Message Alert *@
+ @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+         <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
+    @* User Table Card *@
     <div class="card border-0 shadow-lg" style="background-color: #1e1e2d;">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" style="color: #fff;">
-                    <thead style="background-color: #151521; border-bottom: 2px solid #2b2b40;">
-                        <tr>
-                            <th class="py-3 ps-4 text-muted text-uppercase font-monospace" style="font-size: 0.8rem;">User Name</th>
-                            <th class="py-3 text-muted text-uppercase font-monospace" style="font-size: 0.8rem;">Email</th>
-                            <th class="py-3 text-muted text-uppercase font-monospace" style="font-size: 0.8rem;">Role</th>
-                            <th class="py-3 text-end pe-4 text-muted text-uppercase font-monospace" style="font-size: 0.8rem;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var user in Model)
-                        {
-                            <tr style="border-bottom: 1px solid #2b2b40;">
-                                <td class="py-3 ps-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-primary rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 40px; height: 40px; color: white;">
-                                            @user.FullName.Substring(0, 1)
-                                        </div>
-                                        <span class="fw-bold">@user.FullName</span>
-                                    </div>
-                                </td>
-                                <td class="text-muted">@user.Email</td>
-                                <td>
-                                    @if (user.Role == "Admin")
-                                    {
-                                        <span class="badge bg-danger">Admin</span>
-                                    }
-                                    else if (user.Role == "Clinician")
-                                    {
-                                        <span class="badge bg-info text-dark">Clinician</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-success">Patient</span>
-                                    }
-                                </td>
-                                <td class="text-end pe-4">
-                                    @if (user.Role == "Clinician")
-                                    {
-                                        <a asp-action="PatientLinking" asp-route-clinicianId="@user.Id" class="btn btn-sm btn-outline-light me-2">
-                                            <i class="bi bi-link-45deg"></i> Manage Patients
-                                        </a>
-                                    }
-                                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-outline-secondary" title="Edit User">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+      <table class="table table-hover align-middle mb-0" style="color: #fff;">
+         @* Table Header *@
+        <thead style="background-color: #151521; border-bottom: 2px solid #2b2b40;">
+           <tr>
+             <th class="py-3 ps-4 text-muted text-uppercase font-monospace" style="font-size: 0.8rem;">User Name</th>
+             <th class="py-3 text-muted text-uppercase font-monospace" style="font-size: 0.8rem;">Email</th>
+                <th class="py-3 text-muted text-uppercase font-monospace" style="font-size: 0.8rem;">Role</th>
+                <th class="py-3 text-end pe-4 text-muted text-uppercase font-monospace" style="font-size: 0.8rem;">Actions</th>
+         </tr>
+        </thead>
+@* Table Body - User Rows *@
+      <tbody>
+ @foreach (var user in Model)
+            {
+     <tr style="border-bottom: 1px solid #2b2b40;">
+        @* User Avatar and Name *@
+    <td class="py-3 ps-4">
+      <div class="d-flex align-items-center">
+           <div class="bg-primary rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 40px; height: 40px; color: white;">
+   @user.FullName.Substring(0, 1)
+    </div>
+            <span class="fw-bold">@user.FullName</span>
+           </div>
+      </td>
+          <td class="text-muted">@user.Email</td>
+                 @* Role Badge - Color coded by role type *@
+       <td>
+            @if (user.Role == "Admin")
+           {
+         <span class="badge bg-danger">Admin</span>
+      }
+             else if (user.Role == "Clinician")
+   {
+       <span class="badge bg-info text-dark">Clinician</span>
+     }
+  else
+            {
+        <span class="badge bg-success">Patient</span>
+    }
+ </td>
+   @* Action Buttons *@
+              <td class="text-end pe-4">
+        @* Show Patient Linking button only for Clinicians *@
+         @if (user.Role == "Clinician")
+      {
+         <a asp-action="PatientLinking" asp-route-clinicianId="@user.Id" class="btn btn-sm btn-outline-light me-2">
+ <i class="bi bi-link-45deg"></i> Manage Patients
+  </a>
+        }
+      <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-outline-secondary" title="Edit User">
+          <i class="bi bi-pencil"></i>
+        </a>
+          </td>
+      </tr>
+           }
+      </tbody>
+       </table>
+     </div>
         </div>
     </div>
 </div>

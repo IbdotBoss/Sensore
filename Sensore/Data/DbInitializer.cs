@@ -4,11 +4,21 @@ using System.Text.Json;
 
 namespace Sensore.Data
 {
+    // Initializes the database with essential data on first run.
+    // Creates default roles and a system administrator account.
+    // Called during application startup.
     public static class DbInitializer
     {
+        // Creates roles and the default admin user if they don't exist.
+        // param: serviceProvider - DI service provider
+        // param: userManager - Identity user manager
+        // param: roleManager - Identity role manager
         public static async Task Initialize(IServiceProvider serviceProvider, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager)
         {
-            // 1. Ensure Roles Exist
+            // ----------------------------------------------------------------
+            // STEP 1: Create application roles
+            // Three roles: Admin, Clinician, Patient
+            // ----------------------------------------------------------------
             string[] roleNames = { "Admin", "Clinician", "Patient" };
             foreach (var roleName in roleNames)
             {
@@ -18,7 +28,11 @@ namespace Sensore.Data
                 }
             }
 
-            // 2. Create Admin User
+            // ----------------------------------------------------------------
+            // STEP 2: Create default Admin user
+            // This ensures there's always an admin who can access the system
+            // Default credentials: admin@sensore.com / Admin@123
+            // ----------------------------------------------------------------
             if (await userManager.FindByEmailAsync("admin@sensore.com") == null)
             {
                 var admin = new ApplicationUser
@@ -33,7 +47,10 @@ namespace Sensore.Data
                 await userManager.AddToRoleAsync(admin, "Admin");
             }
 
-            // 3. Create Clinician
+            // ----------------------------------------------------------------
+            // STEP 3: Create default Clinician user for testing
+            // Default credentials: dr.smith@sensore.com / Doctor@123
+            // ----------------------------------------------------------------
             if (await userManager.FindByEmailAsync("dr.smith@sensore.com") == null)
             {
                 var clinician = new ApplicationUser
@@ -48,7 +65,11 @@ namespace Sensore.Data
                 await userManager.AddToRoleAsync(clinician, "Clinician");
             }
 
-            // 4. Create Patient
+            // ----------------------------------------------------------------
+            // STEP 4: Create default Patient user for testing
+            // Default credentials: patient@sensore.com / Patient@123
+            // Also creates the patient's clinical profile
+            // ----------------------------------------------------------------
             if (await userManager.FindByEmailAsync("patient@sensore.com") == null)
             {
                 var patient = new ApplicationUser
@@ -66,7 +87,7 @@ namespace Sensore.Data
                 {
                     await userManager.AddToRoleAsync(patient, "Patient");
 
-                    // 5. Create Patient Profile
+                    // Create the patient's clinical profile with default thresholds
                     var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
                     var profile = new PatientProfile
                     {

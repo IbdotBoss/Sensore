@@ -1,119 +1,141 @@
+@* 
+    Edit User Page
+    Form for admins to edit user details, change roles, and reset passwords.
+    Includes delete functionality with confirmation modal.
+*@
+
 @model Sensore.Models.EditUserViewModel
 @{
     ViewData["Title"] = "Edit User";
 }
 
 <div class="container mt-4">
+    @* Page Header with Back Button *@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold text-white">Edit User</h2>
-        <a asp-action="Index" class="btn btn-outline-light">
-            <i class="bi bi-arrow-left"></i> Back to List
+      <a asp-action="Index" class="btn btn-outline-light">
+     <i class="bi bi-arrow-left"></i> Back to List
         </a>
     </div>
 
+    @* Edit User Form Card *@
     <div class="card border-0 shadow-lg" style="background-color: #1e1e2d;">
         <div class="card-body p-4">
-            <form asp-action="Edit" method="post">
-                <input type="hidden" asp-for="Id" />
-                <input type="hidden" asp-for="CurrentRole" />
-                
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+          <form asp-action="Edit" method="post">
+                @* Hidden Fields for Form State *@
+         <input type="hidden" asp-for="Id" />
+   <input type="hidden" asp-for="CurrentRole" />
+    
+       @* Validation Summary *@
+       <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="FullName" class="form-label text-white"></label>
-                        <input asp-for="FullName" class="form-control" style="background-color: #2a2a3e; color: #e0e0e0; border-color: #3a3a4e;" />
-                        <span asp-validation-for="FullName" class="text-danger"></span>
-                    </div>
+       @* User Details Section *@
+     <div class="row">
+            @* Full Name Input *@
+            <div class="col-md-6 mb-3">
+      <label asp-for="FullName" class="form-label text-white"></label>
+          <input asp-for="FullName" class="form-control" style="background-color: #2a2a3e; color: #e0e0e0; border-color: #3a3a4e;" />
+    <span asp-validation-for="FullName" class="text-danger"></span>
+         </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Email" class="form-label text-white"></label>
-                        <input asp-for="Email" class="form-control" style="background-color: #2a2a3e; color: #e0e0e0; border-color: #3a3a4e;" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
-                </div>
+    @* Email Input *@
+    <div class="col-md-6 mb-3">
+   <label asp-for="Email" class="form-label text-white"></label>
+   <input asp-for="Email" class="form-control" style="background-color: #2a2a3e; color: #e0e0e0; border-color: #3a3a4e;" />
+     <span asp-validation-for="Email" class="text-danger"></span>
+     </div>
+          </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label text-white">Current Role</label>
-                        <input type="text" class="form-control" value="@Model.CurrentRole" readonly style="background-color: #2a2a3e; color: #8e8ea0; border-color: #3a3a4e;" />
-                    </div>
+ @* Role Management Section *@
+       <div class="row">
+  @* Current Role Display (Read-only) *@
+         <div class="col-md-6 mb-3">
+               <label class="form-label text-white">Current Role</label>
+  <input type="text" class="form-control" value="@Model.CurrentRole" readonly style="background-color: #2a2a3e; color: #8e8ea0; border-color: #3a3a4e;" />
+       </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="SelectedRole" class="form-label text-white"></label>
-                        <select asp-for="SelectedRole" asp-items="Model.RoleList" class="form-select" style="background-color: #2a2a3e; color: #e0e0e0; border-color: #3a3a4e;">
-                            <option value="">-- Select Role --</option>
-                        </select>
-                        <span asp-validation-for="SelectedRole" class="text-danger"></span>
-                    </div>
-                </div>
+      @* New Role Dropdown *@
+      <div class="col-md-6 mb-3">
+    <label asp-for="SelectedRole" class="form-label text-white"></label>
+          <select asp-for="SelectedRole" asp-items="Model.RoleList" class="form-select" style="background-color: #2a2a3e; color: #e0e0e0; border-color: #3a3a4e;">
+     <option value="">-- Select Role --</option>
+    </select>
+            <span asp-validation-for="SelectedRole" class="text-danger"></span>
+      </div>
+ </div>
 
-                <hr style="border-color: #3a3a4e;" class="my-4" />
+            <hr style="border-color: #3a3a4e;" class="my-4" />
 
-                <h5 class="text-white mb-3">Change Password (Optional)</h5>
-                <p class="text-muted small">Leave blank to keep the current password</p>
+                @* Password Change Section (Optional) *@
+    <h5 class="text-white mb-3">Change Password (Optional)</h5>
+      <p class="text-muted small">Leave blank to keep the current password</p>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="NewPassword" class="form-label text-white"></label>
-                        <input asp-for="NewPassword" class="form-control" style="background-color: #2a2a3e; color: #e0e0e0; border-color: #3a3a4e;" />
-                        <span asp-validation-for="NewPassword" class="text-danger"></span>
-                    </div>
+        <div class="row">
+      @* New Password Input *@
+      <div class="col-md-6 mb-3">
+           <label asp-for="NewPassword" class="form-label text-white"></label>
+   <input asp-for="NewPassword" class="form-control" style="background-color: #2a2a3e; color: #e0e0e0; border-color: #3a3a4e;" />
+     <span asp-validation-for="NewPassword" class="text-danger"></span>
+     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="ConfirmNewPassword" class="form-label text-white"></label>
-                        <input asp-for="ConfirmNewPassword" class="form-control" style="background-color: #2a2a3e; color: #e0e0e0; border-color: #3a3a4e;" />
-                        <span asp-validation-for="ConfirmNewPassword" class="text-danger"></span>
-                    </div>
-                </div>
+                    @* Confirm New Password Input *@
+      <div class="col-md-6 mb-3">
+   <label asp-for="ConfirmNewPassword" class="form-label text-white"></label>
+           <input asp-for="ConfirmNewPassword" class="form-control" style="background-color: #2a2a3e; color: #e0e0e0; border-color: #3a3a4e;" />
+     <span asp-validation-for="ConfirmNewPassword" class="text-danger"></span>
+              </div>
+   </div>
 
-                <div class="mt-4 d-flex justify-content-between align-items-center">
-                    <div>
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-check-circle"></i> Update User
-                        </button>
-                        <a asp-action="Index" class="btn btn-secondary btn-lg ms-2">Cancel</a>
-                    </div>
-                    
-                    <!-- Delete Button -->
-                    <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                        <i class="bi bi-trash"></i> Delete User
-                    </button>
-                </div>
-            </form>
+                @* Action Buttons *@
+       <div class="mt-4 d-flex justify-content-between align-items-center">
+ <div>
+    <button type="submit" class="btn btn-primary btn-lg">
+       <i class="bi bi-check-circle"></i> Update User
+   </button>
+   <a asp-action="Index" class="btn btn-secondary btn-lg ms-2">Cancel</a>
+          </div>
+      
+           @* Delete Button - Opens Confirmation Modal *@
+            <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#deleteModal">
+      <i class="bi bi-trash"></i> Delete User
+ </button>
+        </div>
+        </form>
         </div>
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
+@* Delete Confirmation Modal *@
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="background-color: #1e1e2d; color: #e0e0e0;">
             <div class="modal-header border-bottom" style="border-color: #3a3a4e !important;">
-                <h5 class="modal-title text-white" id="deleteModalLabel">
-                    <i class="bi bi-exclamation-triangle text-danger"></i> Confirm Deletion
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-warning mb-3">
-                    <strong>Warning:</strong> This action cannot be undone!
-                </p>
-                <p class="mb-0">
-                    Are you sure you want to delete user <strong class="text-white">@Model.FullName</strong>?
-                </p>
-                <p class="text-muted small mt-2">
-                    This will also delete all associated data including pressure readings, comments, and profile information.
-                </p>
-            </div>
-            <div class="modal-footer border-top" style="border-color: #3a3a4e !important;">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash"></i> Yes, Delete
-                    </button>
-                </form>
+    <h5 class="modal-title text-white" id="deleteModalLabel">
+        <i class="bi bi-exclamation-triangle text-danger"></i> Confirm Deletion
+         </h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+         <div class="modal-body">
+   @* Warning Message *@
+        <p class="text-warning mb-3">
+     <strong>Warning:</strong> This action cannot be undone!
+  </p>
+             <p class="mb-0">
+             Are you sure you want to delete user <strong class="text-white">@Model.FullName</strong>?
+        </p>
+          <p class="text-muted small mt-2">
+ This will also delete all associated data including pressure readings, comments, and profile information.
+    </p>
+         </div>
+          <div class="modal-footer border-top" style="border-color: #3a3a4e !important;">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+    @* Delete Form *@
+         <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline">
+     @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-danger">
+        <i class="bi bi-trash"></i> Yes, Delete
+         </button>
+        </form>
             </div>
         </div>
     </div>

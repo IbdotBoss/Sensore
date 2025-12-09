@@ -7,206 +7,251 @@ using Sensore.Models;
 
 namespace Sensore.Controllers
 {
-    [Authorize(Roles = "Clinician")]
+    // Controller for clinician-specific functionality.
+    // Provides patient list, detailed patient views, and care team communication.
+    // Only accessible by users with the Clinician role.
+  [Authorize(Roles = "Clinician")]
     public class ClinicianController : Controller
-    {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
+ {
+     private readonly ApplicationDbContext _context;
+  private readonly UserManager<ApplicationUser> _userManager;
 
-        public ClinicianController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+   public ClinicianController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
-            _context = context;
-            _userManager = userManager;
+   _context = context;
+ _userManager = userManager;
         }
 
-        // 1. Dashboard: List of My Patients with Search and Enhanced Metrics
-        public async Task<IActionResult> Index(string? searchString)
-        {
-            var clinician = await _userManager.GetUserAsync(User);
-            if (clinician == null) return NotFound();
+        // ========================================================================
+        // PATIENT LIST (DASHBOARD)
+        // ========================================================================
 
-            // Fetch assigned patients with optional search filter
-            var assignedPatientsQuery = _context.ClinicianPatientMaps
-                .Where(map => map.ClinicianUserId == clinician.Id)
-                .Select(map => map.PatientUser)
-                .AsQueryable();
+        // Displays the clinician's dashboard with a list of assigned patients.
+        // Shows patient status, alert indicators, risk scores, and message counts.
+    // Supports search by patient name or email.
+        // param: searchString - Optional filter for patient name or email
+     public async Task<IActionResult> Index(string? searchString)
+   {
+   // Get the currently logged-in clinician
+    var clinician = await _userManager.GetUserAsync(User);
+  if (clinician == null) return NotFound();
 
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                assignedPatientsQuery = assignedPatientsQuery
-                    .Where(p => (p.FullName != null && p.FullName.Contains(searchString)) || 
-                               (p.Email != null && p.Email.Contains(searchString)));
-            }
+     // Query patients assigned to this clinician
+  var assignedPatientsQuery = _context.ClinicianPatientMaps
+   .Where(map => map.ClinicianUserId == clinician.Id)
+  .Select(map => map.PatientUser)
+.AsQueryable();
+
+   // Apply search filter if provided
+         if (!string.IsNullOrEmpty(searchString))
+         {
+        assignedPatientsQuery = assignedPatientsQuery
+    .Where(p => (p.FullName != null && p.FullName.Contains(searchString)) || 
+         (p.Email != null && p.Email.Contains(searchString)));
+   }
 
             var assignedPatients = await assignedPatientsQuery.ToListAsync();
-            var viewModel = new List<PatientListItemViewModel>();
+  var viewModel = new List<PatientListItemViewModel>();
 
-            foreach (var patient in assignedPatients)
-            {
-                // Check for alerts in the last 24 hours
-                bool hasAlert = await _context.PressureFrames
-                    .AnyAsync(f => f.PatientUserId == patient.Id
-                                   && f.IsAlertFlagged
-                                   && f.Timestamp >= DateTime.UtcNow.AddHours(-24));
+ // Build view model with metrics for each patient
+     foreach (var patient in assignedPatients)
+     {
+     // Check for pressure alerts in the last 24 hours
+             bool hasAlert = await _context.PressureFrames
+     .AnyAsync(f => f.PatientUserId == patient.Id
+        && f.IsAlertFlagged
+   && f.Timestamp >= DateTime.UtcNow.AddHours(-24));
 
-                var lastFrame = await _context.PressureFrames
-                    .Where(f => f.PatientUserId == patient.Id)
-                    .OrderByDescending(f => f.Timestamp)
-                    .FirstOrDefaultAsync();
+   // Get the most recent pressure frame
+     var lastFrame = await _context.PressureFrames
+        .Where(f => f.PatientUserId == patient.Id)
+ .OrderByDescending(f => f.Timestamp)
+    .FirstOrDefaultAsync();
 
-                // Count messages
-                int msgCount = await _context.Comments
-                    .CountAsync(c => c.PatientUserId == patient.Id);
+          // Count total messages for this patient
+      int msgCount = await _context.Comments
+      .CountAsync(c => c.PatientUserId == patient.Id);
 
-                // Calculate Risk Score (0-10) based on peak pressure
-                double riskScore = 0;
-                if (lastFrame != null)
-                {
-                    riskScore = Math.Round((double)lastFrame.PeakPressureIndex / 25.5, 1); // Map 255 -> 10
-                }
+     // Calculate risk score (0-10) based on peak pressure
+         // Maps pressure value 0-255 to score 0-10
+     double riskScore = 0;
+     if (lastFrame != null)
+{
+      riskScore = Math.Round((double)lastFrame.PeakPressureIndex / 25.5, 1);
+      }
 
-                viewModel.Add(new PatientListItemViewModel
-                {
-                    PatientId = patient.Id,
-                    Name = patient.FullName ?? patient.UserName ?? "Unknown",
-                    Email = patient.Email ?? "No email",
-                    HasActiveAlert = hasAlert,
-                    LastUpdate = lastFrame?.Timestamp ?? DateTime.MinValue,
-                    RiskScore = riskScore,
-                    MessageCount = msgCount
-                });
-            }
+  viewModel.Add(new PatientListItemViewModel
+  {
+    PatientId = patient.Id,
+       Name = patient.FullName ?? patient.UserName ?? "Unknown",
+      Email = patient.Email ?? "No email",
+   HasActiveAlert = hasAlert,
+ LastUpdate = lastFrame?.Timestamp ?? DateTime.MinValue,
+      RiskScore = riskScore,
+       MessageCount = msgCount
+ });
+         }
 
-            ViewBag.SearchString = searchString;
+ ViewBag.SearchString = searchString;
             return View(viewModel);
         }
 
-        // 2. Patient Detail View
+   // ========================================================================
+      // PATIENT DETAIL VIEW
+        // ========================================================================
+
+     // Displays detailed information for a specific patient.
+        // Shows pressure data, heatmap, trend chart, and communication history.
+      // Only allows viewing patients assigned to this clinician.
+ // param: id - The patient's user ID
         public async Task<IActionResult> PatientDetail(string id)
-        {
-            if (string.IsNullOrEmpty(id)) return NotFound();
+    {
+ if (string.IsNullOrEmpty(id)) return NotFound();
 
-            // Security Check: Ensure this patient is actually assigned to this clinician
-            var clinician = await _userManager.GetUserAsync(User);
-            if (clinician == null) return NotFound();
+ // Security check: verify the clinician is assigned to this patient
+    var clinician = await _userManager.GetUserAsync(User);
+  if (clinician == null) return NotFound();
 
-            bool isAssigned = await _context.ClinicianPatientMaps
-                .AnyAsync(m => m.ClinicianUserId == clinician.Id && m.PatientUserId == id);
+        bool isAssigned = await _context.ClinicianPatientMaps
+  .AnyAsync(m => m.ClinicianUserId == clinician.Id && m.PatientUserId == id);
 
-            if (!isAssigned) return Forbid();
+ if (!isAssigned) return Forbid();
 
-            var patient = await _context.Users.FindAsync(id);
-            if (patient == null) return NotFound();
+       // Get patient details
+  var patient = await _context.Users.FindAsync(id);
+     if (patient == null) return NotFound();
 
-            var profile = await _context.PatientProfiles.FirstOrDefaultAsync(p => p.PatientUserId == id);
+   // Get or create patient profile with default thresholds
+         var profile = await _context.PatientProfiles.FirstOrDefaultAsync(p => p.PatientUserId == id);
 
-            // Create default profile if missing
             if (profile == null)
-            {
-                profile = new PatientProfile 
-                { 
-                    PatientUserId = id,
-                    HighPressureThreshold = 150,
-                    MinAlertArea = 10,
-                    ContactThreshold = 3
-                };
-                _context.PatientProfiles.Add(profile);
-                await _context.SaveChangesAsync();
+   {
+  profile = new PatientProfile 
+ { 
+       PatientUserId = id,
+      HighPressureThreshold = 150,
+  MinAlertArea = 10,
+     ContactThreshold = 3
+         };
+    _context.PatientProfiles.Add(profile);
+       await _context.SaveChangesAsync();
             }
 
-            var latestFrame = await _context.PressureFrames
+  // Get latest pressure frame for heatmap
+      var latestFrame = await _context.PressureFrames
                 .Where(f => f.PatientUserId == id)
-                .OrderByDescending(f => f.Timestamp)
-                .FirstOrDefaultAsync();
+    .OrderByDescending(f => f.Timestamp)
+  .FirstOrDefaultAsync();
 
-            var history = await _context.PressureFrames
-                .Where(f => f.PatientUserId == id && f.Timestamp >= DateTime.UtcNow.AddHours(-24))
-                .OrderBy(f => f.Timestamp)
-                .ToListAsync();
+         // Get 24-hour history for trend chart
+  var history = await _context.PressureFrames
+     .Where(f => f.PatientUserId == id && f.Timestamp >= DateTime.UtcNow.AddHours(-24))
+         .OrderBy(f => f.Timestamp)
+    .ToListAsync();
 
-            var recentComments = await _context.Comments
-                .Include(c => c.AuthorUser)
-                .Include(c => c.Replies)
-                    .ThenInclude(r => r.AuthorUser)
-                .Where(c => c.PatientUserId == id && c.ParentCommentId == null)
-                .OrderByDescending(c => c.CreatedAt)
-                .Take(20)
-                .ToListAsync();
+       // Get recent comments with replies for communication panel
+   var recentComments = await _context.Comments
+      .Include(c => c.AuthorUser)
+   .Include(c => c.Replies)
+ .ThenInclude(r => r.AuthorUser)
+   .Where(c => c.PatientUserId == id && c.ParentCommentId == null)
+ .OrderByDescending(c => c.CreatedAt)
+     .Take(20)
+           .ToListAsync();
 
-            var viewModel = new ClinicianPatientDetailViewModel
-            {
-                Patient = patient,
-                Profile = profile,
-                LatestFrame = latestFrame,
-                History = history,
-                RecentComments = recentComments
-            };
+   var viewModel = new ClinicianPatientDetailViewModel
+   {
+        Patient = patient,
+       Profile = profile,
+            LatestFrame = latestFrame,
+       History = history,
+    RecentComments = recentComments
+     };
 
-            return View(viewModel);
+  return View(viewModel);
         }
 
-        // 3. Update Thresholds (POST)
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateSettings(int profileId, int highPressureThreshold, int minAlertArea)
-        {
-            var profile = await _context.PatientProfiles.FindAsync(profileId);
-            if (profile == null) return NotFound();
+      // ========================================================================
+  // PATIENT SETTINGS
+        // ========================================================================
 
-            // Security check: Verify clinician has access to this patient
+        // Updates the alert thresholds for a patient.
+        // Allows clinicians to customize pressure and area thresholds.
+        // param: profileId - The patient profile ID to update
+        // param: highPressureThreshold - New high pressure alert threshold
+     // param: minAlertArea - New minimum blob size for alerts
+        [HttpPost]
+      [ValidateAntiForgeryToken]
+      public async Task<IActionResult> UpdateSettings(int profileId, int highPressureThreshold, int minAlertArea)
+      {
+var profile = await _context.PatientProfiles.FindAsync(profileId);
+     if (profile == null) return NotFound();
+
+       // Security check: verify clinician has access to this patient
             var clinician = await _userManager.GetUserAsync(User);
-            if (clinician == null) return NotFound();
+      if (clinician == null) return NotFound();
 
             bool isAssigned = await _context.ClinicianPatientMaps
-                .AnyAsync(m => m.ClinicianUserId == clinician.Id && m.PatientUserId == profile.PatientUserId);
+       .AnyAsync(m => m.ClinicianUserId == clinician.Id && m.PatientUserId == profile.PatientUserId);
 
-            if (!isAssigned) return Forbid();
+   if (!isAssigned) return Forbid();
 
+ // Update the threshold settings
             profile.HighPressureThreshold = highPressureThreshold;
-            profile.MinAlertArea = minAlertArea;
+          profile.MinAlertArea = minAlertArea;
 
-            _context.Update(profile);
-            await _context.SaveChangesAsync();
+       _context.Update(profile);
+   await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Settings updated successfully.";
+     TempData["SuccessMessage"] = "Settings updated successfully.";
             return RedirectToAction("PatientDetail", new { id = profile.PatientUserId });
         }
 
-        // 4. Clinician Reply to Comment
+   // ========================================================================
+        // COMMUNICATION
+  // ========================================================================
+
+        // Posts a comment or reply on a patient's record.
+        // Enables clinician-patient communication.
+        // param: patientId - The patient this comment is about
+        // param: commentText - The text content of the comment
+      // param: parentId - Optional parent comment ID for replies
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ReplyToComment(string patientId, string commentText, int? parentId)
-        {
-            if (string.IsNullOrWhiteSpace(commentText) || string.IsNullOrEmpty(patientId))
-            {
-                TempData["ErrorMessage"] = "Comment text and patient ID are required.";
-                return RedirectToAction("PatientDetail", new { id = patientId });
-            }
+   [ValidateAntiForgeryToken]
+     public async Task<IActionResult> ReplyToComment(string patientId, string commentText, int? parentId)
+  {
+     // Validate required fields
+   if (string.IsNullOrWhiteSpace(commentText) || string.IsNullOrEmpty(patientId))
+       {
+TempData["ErrorMessage"] = "Comment text and patient ID are required.";
+          return RedirectToAction("PatientDetail", new { id = patientId });
+       }
 
-            var clinician = await _userManager.GetUserAsync(User);
-            if (clinician == null) return NotFound();
+   var clinician = await _userManager.GetUserAsync(User);
+ if (clinician == null) return NotFound();
 
-            // Security check: Verify clinician has access to this patient
+   // Security check: verify clinician has access to this patient
             bool isAssigned = await _context.ClinicianPatientMaps
-                .AnyAsync(m => m.ClinicianUserId == clinician.Id && m.PatientUserId == patientId);
+      .AnyAsync(m => m.ClinicianUserId == clinician.Id && m.PatientUserId == patientId);
 
-            if (!isAssigned) return Forbid();
+       if (!isAssigned) return Forbid();
 
-            var comment = new Comment
-            {
-                AuthorUserId = clinician.Id,
-                PatientUserId = patientId,
-                CommentText = commentText,
-                CreatedAt = DateTime.UtcNow,
-                ThreadTimestamp = DateTime.UtcNow,
-                ParentCommentId = parentId
-            };
+ // Create the comment (can be top-level or a reply)
+   var comment = new Comment
+     {
+   AuthorUserId = clinician.Id,
+    PatientUserId = patientId,
+               CommentText = commentText,
+       CreatedAt = DateTime.UtcNow,
+    ThreadTimestamp = DateTime.UtcNow,
+   ParentCommentId = parentId
+      };
 
-            _context.Comments.Add(comment);
-            await _context.SaveChangesAsync();
+    _context.Comments.Add(comment);
+    await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Comment posted successfully.";
+   TempData["SuccessMessage"] = "Comment posted successfully.";
             return RedirectToAction("PatientDetail", new { id = patientId });
-        }
+    }
     }
 }
