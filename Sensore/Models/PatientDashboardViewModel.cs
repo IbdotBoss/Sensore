@@ -9,18 +9,18 @@ namespace Sensore.Models
     {
         // The most recent pressure frame for heatmap visualization.
         // May be null if no data has been recorded yet.
-        public PressureFrame LatestFrame { get; set; }
+        public PressureFrame? LatestFrame { get; set; }
 
         // Historical pressure frames for trend chart display.
         // Typically contains the last 24 hours or 100 most recent frames.
-        public List<PressureFrame> History { get; set; }
+        public List<PressureFrame> History { get; set; } = new List<PressureFrame>();
 
         // The patient's clinical profile with alert thresholds.
         // Used to display current settings and alert levels.
-        public PatientProfile Profile { get; set; }
+        public PatientProfile? Profile { get; set; }
 
         // The patient's display name for the dashboard greeting.
-        public string UserName { get; set; }
+        public string UserName { get; set; } = string.Empty;
         
         // Recent comments and replies from the care team.
         // Enables patient-clinician communication.
@@ -28,6 +28,6 @@ namespace Sensore.Models
 
         // Daily comparison report showing pressure trends.
         // Provides feedback like "Your pressure is X% lower than yesterday."
-        public string DailyComparisonReport { get; set; }
+        public string DailyComparisonReport { get; set; } = string.Empty;
     }
 }

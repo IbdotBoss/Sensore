@@ -20,7 +20,7 @@ namespace Sensore.Services
         // Metrics are calculated during parsing for efficient storage.
         // param: filePath - Path to the CSV file
         // param: patientUserId - The patient this data belongs to
-        // param: startTimestamp - Base timestamp for the first frame (subsequent frames are +1 second each)
+        // param: startTimestamp - Base timestamp for the first frame
         // returns: List of PressureFrame objects ready for database insertion
         public List<PressureFrame> ParseCsv(string filePath, string patientUserId, DateTime startTimestamp)
         {
@@ -37,6 +37,11 @@ namespace Sensore.Services
             // Each frame is 32 rows of data
             int rowsPerFrame = 32;
             int totalFrames = lines.Count / rowsPerFrame;
+
+            // Calculate time interval to spread frames across 24 hours
+            // This creates realistic data for demonstrating time range filters
+            // If we have 100 frames, spread them over 24 hours (each frame ~14-15 minutes apart)
+            double minutesPerFrame = totalFrames > 1 ? (24.0 * 60.0) / totalFrames : 15;
 
             // Process each frame
             for (int i = 0; i < totalFrames; i++)
@@ -79,11 +84,12 @@ namespace Sensore.Services
 
                 // ----------------------------------------------------------------
                 // STEP 3: Create the PressureFrame object
+                // Spread frames across 24 hours for realistic time-based filtering
                 // ----------------------------------------------------------------
                 var frame = new PressureFrame
                 {
                     PatientUserId = patientUserId,
-                    Timestamp = startTimestamp.AddSeconds(i), // Each frame = 1 second
+                    Timestamp = startTimestamp.AddMinutes(i * minutesPerFrame), // Spread across 24 hours
                     PressureDataJson = JsonSerializer.Serialize(matrix),
                     PeakPressureIndex = analysis.PeakPressure,
                     ContactAreaPercent = analysis.ContactAreaPercent,

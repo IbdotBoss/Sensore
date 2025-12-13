@@ -11,7 +11,7 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
-<ul class="navbar-nav">
+<ul class="navbar-nav ms-auto d-flex align-items-center">
     @* Authenticated User View *@
     @if (SignInManager.IsSignedIn(User))
     {
@@ -25,17 +25,17 @@
             </a>
         </li>
       @* Logout Button *@
- <li class="nav-item">
-            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-      <button type="submit" class="nav-link btn btn-link text-white">Logout</button>
-            </form>
+ <li class="nav-item ms-2">
+            <form class="d-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+    </form>
       </li>
     }
     else
     {
         @* Login Link for Unauthenticated Users *@
  <li class="nav-item">
-        <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Login">Login</a>
+        <a class="btn btn-primary" asp-area="Identity" asp-page="/Account/Login">Login</a>
         </li>
     }
 </ul>
@@ -52,21 +52,8 @@
         color: #ffffff !important;
     }
 
-    .btn-link {
-        text-decoration: none;
-        padding: 0;
-    }
-
-    .btn-link:hover {
-        text-decoration: underline;
-    }
-
- .nav-item form {
-        margin: 0;
-    }
-
     .bi-person-circle {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         margin-right: 0.25rem;
     }
 </style>

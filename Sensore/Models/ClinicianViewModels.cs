@@ -7,28 +7,28 @@ namespace Sensore.Models
     public class PatientListItemViewModel
     {
         // The unique identifier of the patient.
-     public string PatientId { get; set; }
+        public string PatientId { get; set; } = string.Empty;
 
         // The patient's display name.
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         // The patient's email address.
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
-   // Indicates if the patient has had a pressure alert in the last 24 hours.
+        // Indicates if the patient has had a pressure alert in the last 24 hours.
         // Used to highlight patients needing attention.
         public bool HasActiveAlert { get; set; }
 
         // Timestamp of the patient's most recent pressure reading.
-    public DateTime LastUpdate { get; set; }
+        public DateTime LastUpdate { get; set; }
 
-      // Calculated risk score from 0-10 based on peak pressure.
+        // Calculated risk score from 0-10 based on peak pressure.
         // Higher scores indicate higher pressure levels.
-     public double RiskScore { get; set; }
+        public double RiskScore { get; set; }
 
         // Total number of comments/messages for this patient.
         // Indicates communication activity level.
-   public int MessageCount { get; set; }
+        public int MessageCount { get; set; }
     }
 
     // View model for the clinician's detailed patient view.
@@ -48,8 +48,8 @@ namespace Sensore.Models
         // Historical pressure frames for trend analysis.
         public List<PressureFrame> History { get; set; } = new List<PressureFrame>();
 
-  // Recent comments from both patient and clinician.
-   // Enables threaded communication view.
+        // Recent comments from both patient and clinician.
+        // Enables threaded communication view.
         public List<Comment> RecentComments { get; set; } = new List<Comment>();
     }
 }

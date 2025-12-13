@@ -8,248 +8,212 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Sensore</title>
-    
-    @* CSS References *@
+ 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Sensore.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    
-    @* Global Dark Theme Styles *@
+ 
     <style>
-        body {
-    background-color: #0f0f1e;
-            color: #e0e0e0;
-       min-height: 100vh;
-   }
+        :root {
+       --primary-blue: #4285f4;
+            --primary-blue-hover: #3b78e7;
+      --primary-blue-light: rgba(66, 133, 244, 0.15);
+     --dark-bg: #0f0f1e;
+            --card-bg: #1e1e2d;
+      --card-border: #2a2a3e;
+            --text-primary: #e0e0e0;
+            --text-muted: #8e8ea0;
+        }
 
- /* Navbar Styling */
-        .navbar {
-   background-color: #1e1e2d !important;
-            border-bottom: 1px solid #2a2a3e;
- box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      * { box-sizing: border-box; }
+
+        html, body {
+     margin: 0;
+            padding: 0;
+         background-color: var(--dark-bg);
+  color: var(--text-primary);
       }
 
+      .navbar {
+       background-color: var(--card-bg) !important;
+     border-bottom: 1px solid var(--card-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
         .navbar-brand {
-color: #ffffff !important;
-    font-weight: 700;
-            font-size: 1.5rem;
-    display: flex;
-      align-items: center;
-   gap: 0.5rem;
-  }
+   color: #ffffff !important;
+     font-weight: 700;
+   font-size: 1.5rem;
+            display: flex;
+ align-items: center;
+          gap: 0.5rem;
+      }
 
-     .navbar-brand:hover {
-    color: #667eea !important;
-        }
+        .navbar-brand:hover { color: var(--primary-blue) !important; }
 
-        .navbar-toggler {
-     border-color: rgba(255, 255, 255, 0.1);
-    }
+        .navbar-toggler { border-color: rgba(255, 255, 255, 0.1); }
 
-        .navbar-toggler-icon {
+  .navbar-toggler-icon {
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-        }
+     }
 
-    /* Main Content Area */
-        main {
-            min-height: calc(100vh - 140px);
-        }
-
-        /* Footer */
-        .footer {
-            background-color: #1e1e2d;
-     border-top: 1px solid #2a2a3e;
-       color: #8e8ea0;
-      padding: 1.5rem 0;
-        }
-
-        .footer a {
-            color: #667eea;
-          text-decoration: none;
-        }
-
-     .footer a:hover {
-   color: #764ba2;
-            text-decoration: underline;
-        }
-
-        /* Card Components */
         .card {
-      background-color: #1e1e2d;
-    border: 1px solid #2a2a3e;
-            color: #e0e0e0;
+      background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+      color: var(--text-primary);
         }
 
         .card-header {
-       background-color: #2a2a3e;
-            border-bottom: 1px solid #3a3a4e;
-            color: #ffffff;
+            background-color: #2a2a3e;
+      border-bottom: 1px solid #3a3a4e;
+      color: #ffffff;
         }
 
-        /* Form Controls */
-        .form-control,
-        .form-select {
-       background-color: #2a2a3e;
-    border: 1px solid #3a3a4e;
-  color: #e0e0e0;
-    }
-
-        .form-control:focus,
-     .form-select:focus {
-     background-color: #2a2a3e;
-   border-color: #667eea;
-   color: #e0e0e0;
-         box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+      /* Form Controls */
+        .form-control, .form-select,
+        input[type="text"], input[type="email"], input[type="password"],
+        input[type="tel"], input[type="number"], input[type="url"], textarea {
+         background-color: #2a2a3e !important;
+  border: 1px solid #3a3a4e !important;
+    color: #ffffff !important;
         }
 
-        .form-control::placeholder {
-     color: #6c6c80;
-    }
+        .form-control:focus, .form-select:focus,
+     input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus,
+  input[type="tel"]:focus, input[type="number"]:focus, input[type="url"]:focus, textarea:focus {
+            background-color: #2a2a3e !important;
+            border-color: var(--primary-blue) !important;
+      color: #ffffff !important;
+ box-shadow: 0 0 0 0.25rem var(--primary-blue-light) !important;
+        }
 
-        .form-label {
-  color: #b0b0c0;
-            font-weight: 500;
+   .form-control::placeholder, input::placeholder, textarea::placeholder {
+        color: #6c6c80 !important;
+          opacity: 1;
+ }
+
+        .form-floating > label { color: #8e8ea0 !important; }
+        .form-floating > .form-control:focus ~ label,
+        .form-floating > .form-control:not(:placeholder-shown) ~ label { color: #a0a0b0 !important; }
+      .form-label { color: #b0b0c0; font-weight: 500; }
+
+    .input-group-text { background-color: #3a3a4e; border: 1px solid #3a3a4e; color: #a0a0b0; }
+
+        .form-control:disabled, .form-control[readonly], input:disabled, input[readonly] {
+       background-color: #1e1e2d !important;
+     color: #8e8ea0 !important;
+opacity: 1;
         }
 
         /* Buttons */
-        .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border: none;
-        }
-
-        .btn-primary:hover {
-  background: linear-gradient(135deg, #5a6fcf 0%, #654091 100%);
+        .btn-primary { background-color: var(--primary-blue); border-color: var(--primary-blue); }
+        .btn-primary:hover, .btn-primary:focus {
+       background-color: var(--primary-blue-hover);
+   border-color: var(--primary-blue-hover);
  transform: translateY(-1px);
-box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
         }
-
- .btn-secondary {
-         background-color: #3a3a4e;
-      border: none;
-  color: #e0e0e0;
-        }
-
-   .btn-secondary:hover {
-    background-color: #4a4a5e;
-      color: #ffffff;
-   }
+    .btn-primary:active { background-color: #3367d6; border-color: #3367d6; }
+        .btn-secondary { background-color: #3a3a4e; border: none; color: var(--text-primary); }
+        .btn-secondary:hover { background-color: #4a4a5e; color: #ffffff; }
+        .btn-outline-primary { border-color: var(--primary-blue); color: var(--primary-blue); }
+        .btn-outline-primary:hover { background-color: var(--primary-blue); border-color: var(--primary-blue); color: white; }
 
         /* Tables */
-        .table {
-   color: #e0e0e0;
-        }
+        .table { color: var(--text-primary); }
+        .table thead th { border-color: var(--card-border); background-color: #2a2a3e; }
+   .table tbody td { border-color: var(--card-border); }
+        .table-striped > tbody > tr:nth-of-type(odd) > * { color: var(--text-primary); background-color: rgba(42, 42, 62, 0.3); }
+        .table-hover > tbody > tr:hover > * { background-color: var(--primary-blue-light); }
 
-        .table thead th {
-    border-color: #2a2a3e;
-            background-color: #2a2a3e;
-        }
+        /* Links */
+        a { color: var(--primary-blue); }
+        a:hover { color: var(--primary-blue-hover); }
 
-        .table tbody td {
-    border-color: #2a2a3e;
-        }
-
-     .table-striped > tbody > tr:nth-of-type(odd) > * {
-            color: #e0e0e0;
-            background-color: rgba(42, 42, 62, 0.3);
-        }
-
-    .table-hover > tbody > tr:hover > * {
-  background-color: rgba(102, 126, 234, 0.1);
-        }
-
-    /* Links */
-        a { color: #667eea; }
-        a:hover { color: #764ba2; }
-
-        /* Alert Boxes */
+        /* Alerts */
         .alert { border: none; }
-        .alert-info { background-color: rgba(102, 126, 234, 0.15); color: #a0b0ff; }
+        .alert-info { background-color: var(--primary-blue-light); color: #a0c4ff; }
         .alert-success { background-color: rgba(105, 240, 174, 0.15); color: #69f0ae; }
-        .alert-warning { background-color: rgba(255, 171, 64, 0.15); color: #ffab40; }
-  .alert-danger { background-color: rgba(255, 82, 82, 0.15); color: #ff5252; }
+     .alert-warning { background-color: rgba(255, 171, 64, 0.15); color: #ffab40; }
+   .alert-danger { background-color: rgba(255, 82, 82, 0.15); color: #ff5252; }
 
-    /* Text Utilities */
-        .text-muted { color: #8e8ea0 !important; }
-        .text-white { color: #ffffff !important; }
+        .text-muted { color: var(--text-muted) !important; }
+   .text-white { color: #ffffff !important; }
+      .navbar-brand::before { content: "📊"; font-size: 1.5rem; }
+        .badge.bg-primary { background-color: var(--primary-blue) !important; }
 
-  /* Navbar Brand Icon */
-        .navbar-brand::before {
-          content: "📊";
-            font-size: 1.5rem;
-        }
+        /* Nav/List for Identity pages */
+        .nav-pills .nav-link { color: var(--primary-blue); }
+        .nav-pills .nav-link.active { background-color: var(--primary-blue); color: white; }
+.list-group-item { background-color: transparent; border-color: var(--card-border); color: var(--primary-blue); }
+    .list-group-item.active { background-color: var(--primary-blue); border-color: var(--primary-blue); color: white; }
+   .list-group-item:hover:not(.active) { background-color: rgba(66, 133, 244, 0.1); color: var(--primary-blue); }
+
+        /* Validation */
+        .text-danger { color: #ff5252 !important; }
+    .invalid-feedback { color: #ff5252; }
+        .form-control.is-invalid, .was-validated .form-control:invalid { border-color: #ff5252 !important; }
+        .form-control.is-valid, .was-validated .form-control:valid { border-color: #69f0ae !important; }
     </style>
 </head>
 <body>
-    @* Navigation Header *@
     <header>
         <nav class="navbar navbar-expand-sm navbar-dark border-bottom box-shadow mb-3">
-       <div class="container-fluid">
-     @* Brand Logo *@
- <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Sensore</a>
-       @* Mobile Toggle Button *@
-  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+            <div class="container-fluid">
+        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Sensore</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
          aria-expanded="false" aria-label="Toggle navigation">
-     <span class="navbar-toggler-icon"></span>
-             </button>
-                @* Navigation Links *@
-       <div class="navbar-collapse collapse d-flex justify-content-between">
-     <ul class="navbar-nav flex-grow-1">
-      <li class="nav-item">
-        <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-            </li>
-         <li class="nav-item">
-            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-         </li>
-        </ul>
-     
-        @* Login/Logout Partial *@
-         <partial name="_LoginPartial" />
-       </div>
+                  <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="navbar-collapse collapse d-flex justify-content-between">
+      <ul class="navbar-nav flex-grow-1">
+    <li class="nav-item">
+      <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+               </li>
+        <li class="nav-item">
+       <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+   </li>
+</ul>
+     <partial name="_LoginPartial" />
             </div>
+     </div>
         </nav>
     </header>
-    
-    @* Main Content Area *@
-    <div class="container-fluid">
+
+  <div class="container-fluid">
         <main role="main" class="pb-3">
-   @* Page Content Rendered Here *@
-            @RenderBody()
+   @RenderBody()
 
-  @* Success Message Toast *@
-     @if (TempData["SuccessMessage"] != null)
-        {
-      <div class="alert alert-success alert-dismissible fade show" role="alert">
-    <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-     </div>
-   }
+            @if (TempData["SuccessMessage"] != null)
+  {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+             <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+           </div>
+    }
 
-          @* Error Message Toast *@
-  @if (TempData["ErrorMessage"] != null)
- {
-         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-<i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
-       }
-      </main>
+ @if (TempData["ErrorMessage"] != null)
+  {
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+            }
+        </main>
     </div>
 
-    @* Footer *@
-    <footer class="footer text-muted mt-5">
+ <footer class="text-muted py-4 mt-5" style="background-color: #1e1e2d; border-top: 1px solid #2a2a3e;">
         <div class="container">
-   &copy; 2025 - Sensore - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+  &copy; 2025 - Sensore - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
-    
-    @* JavaScript References *@
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    @* Scripts Section for Page-Specific JS *@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
