@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <Folder Include="Data\Seeds\" />
+    <Folder Include="Views\Patient\Home\" />
   </ItemGroup>
 
   <!-- Add this ItemGroup to copy CSV files -->

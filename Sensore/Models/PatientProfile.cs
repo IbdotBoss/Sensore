@@ -3,40 +3,29 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Sensore.Models
 {
-    // Represents a patient's clinical profile and pressure monitoring settings.
-    // Each patient has one profile that stores their personalized alert thresholds.
-    // Clinicians can adjust these settings based on patient needs.
+    // Stores customizable alert thresholds for each patient.
     public class PatientProfile
     {
-      // Unique identifier for the profile.
         [Key]
-     public int ProfileId { get; set; }
+        public int ProfileId { get; set; }
 
-        // Foreign key to the patient user.
-        [ForeignKey("ApplicationUser")]
-   public string PatientUserId { get; set; }
+        // Links to the patient user (1:1 relationship)
+        [Required]
+        [ForeignKey("PatientUser")]
+        public string PatientUserId { get; set; } = string.Empty;
 
-   // Navigation property to the patient user.
-        public ApplicationUser PatientUser { get; set; }
+        public virtual ApplicationUser? PatientUser { get; set; }
 
-        // ========================================================================
-        // CLINICAL CONFIGURATION
-        // Alert thresholds customizable per patient by clinicians
-        // ========================================================================
-
-        // Pressure value (0-255) above which an alert is triggered.
-        // Higher values require more pressure to trigger alerts.
-      // Default: 150
+        // Pressure level that triggers an alert (0-255)
+        [Range(1, 255)]
         public int HighPressureThreshold { get; set; } = 150;
 
-     // Minimum number of connected pixels to consider as a valid pressure area.
-   // Smaller blobs are ignored to reduce noise.
-        // Default: 10 pixels
+        // Minimum blob size to consider as valid pressure area
+        [Range(1, 1024)]
         public int MinAlertArea { get; set; } = 10;
 
-        // Minimum pressure value to consider as "contact" with the sensor.
-     // Values below this are treated as no contact.
-        // Default: 3
+        // Minimum pressure to register as contact with sensor
+        [Range(0, 50)]
         public int ContactThreshold { get; set; } = 3;
     }
 }

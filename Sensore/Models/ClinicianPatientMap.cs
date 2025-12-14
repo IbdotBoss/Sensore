@@ -1,26 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Sensore.Models
 {
-    // Represents the many-to-many relationship between Clinicians and Patients.
-  // Allows a clinician to be assigned to multiple patients and vice versa.
-    // Used to control which patients a clinician can view and manage.
+    // Junction table for M:N clinician-patient assignments.
     public class ClinicianPatientMap
-  {
-        // Foreign key to the clinician user.
-       // Part of the composite primary key.
-     [ForeignKey("ApplicationUser")]
-     public string ClinicianUserId { get; set; }
+    {
+        [Required]
+        [ForeignKey("ClinicianUser")]
+        public string ClinicianUserId { get; set; } = string.Empty;
 
-      // Navigation property to the clinician user.
-  public ApplicationUser ClinicianUser { get; set; }
+        public virtual ApplicationUser? ClinicianUser { get; set; }
 
-    // Foreign key to the patient user.
-        // Part of the composite primary key.
-        [ForeignKey("ApplicationUser")]
-      public string PatientUserId { get; set; }
+        [Required]
+        [ForeignKey("PatientUser")]
+        public string PatientUserId { get; set; } = string.Empty;
 
-  // Navigation property to the patient user.
-       public ApplicationUser PatientUser { get; set; }
+        public virtual ApplicationUser? PatientUser { get; set; }
     }
 }

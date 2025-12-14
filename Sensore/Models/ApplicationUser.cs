@@ -4,51 +4,38 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Sensore.Models
 {
-    // Represents a user in the Sensore system.
-    // Extends IdentityUser to support custom properties and relationships.
-    // Users can be Admins, Clinicians, or Patients.
+    // Extends IdentityUser with custom properties for the Sensore system.
     public class ApplicationUser : IdentityUser
     {
-        // The user's full name for display purposes.
-        // Marked as personal data for GDPR compliance.
+        // Display name for the user (e.g., "Dr. Ibrahim Uthman")
         [PersonalData]
-        public string FullName { get; set; }
+   [StringLength(100)]
+     public string? FullName { get; set; }
 
-     // Stores the user's role type as a string: "Admin", "Clinician", or "Patient".
-      // Used for quick role identification without querying the roles table.
-        public string RoleType { get; set; }
+        // Quick role lookup without querying AspNetUserRoles table
+  [StringLength(20)]
+        public string? RoleType { get; set; }
 
-        // ========================================================================
-        // NAVIGATION PROPERTIES
-// Define relationships between users and other entities
-  // ========================================================================
+     // Patient's alert threshold settings (null for non-patients)
+        public virtual PatientProfile? PatientProfile { get; set; }
 
-    // The patient's clinical profile with pressure monitoring settings.
-   // Only applicable for users with the Patient role.
-        public PatientProfile PatientProfile { get; set; }
+        // Pressure sensor readings for this patient
+      public virtual ICollection<PressureFrame> PressureFrames { get; set; } = new List<PressureFrame>();
 
-  // Collection of pressure sensor data frames recorded for this patient.
-        // Only applicable for users with the Patient role.
-        public ICollection<PressureFrame> PressureFrames { get; set; }
+        // Comments written by this user
+ [InverseProperty("AuthorUser")]
+        public virtual ICollection<Comment> AuthoredComments { get; set; } = new List<Comment>();
 
-        // Comments created by this user (as author).
-        // Clinicians and Patients can author comments.
-        [InverseProperty("AuthorUser")]
-        public ICollection<Comment> AuthoredComments { get; set; }
-
-        // Comments made about this user (as patient).
-        // Only applicable for users with the Patient role.
-   [InverseProperty("PatientUser")]
-        public ICollection<Comment> ReceivedComments { get; set; }
-
-// Patients assigned to this clinician.
-        // Only applicable for users with the Clinician role.
-  [InverseProperty("ClinicianUser")]
-      public ICollection<ClinicianPatientMap> AssignedPatients { get; set; }
-
-        // Clinicians assigned to this patient.
-        // Only applicable for users with the Patient role.
+        // Comments on this patient's record
         [InverseProperty("PatientUser")]
-        public ICollection<ClinicianPatientMap> AssignedClinicians { get; set; }
+     public virtual ICollection<Comment> ReceivedComments { get; set; } = new List<Comment>();
+
+        // Patients assigned to this clinician
+        [InverseProperty("ClinicianUser")]
+        public virtual ICollection<ClinicianPatientMap> AssignedPatients { get; set; } = new List<ClinicianPatientMap>();
+
+        // Clinicians assigned to this patient
+        [InverseProperty("PatientUser")]
+        public virtual ICollection<ClinicianPatientMap> AssignedClinicians { get; set; } = new List<ClinicianPatientMap>();
     }
 }

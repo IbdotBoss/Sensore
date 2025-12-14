@@ -3,52 +3,39 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Sensore.Models
 {
-    // Represents a single frame of pressure sensor data captured from a patient.
-    // Each frame contains a 32x32 matrix of pressure values and calculated metrics.
-    // Frames are recorded at regular intervals and stored for analysis and visualization.
+    // Single frame of 32x32 pressure sensor data with pre-calculated metrics.
     public class PressureFrame
     {
-        // Unique identifier for the pressure frame.
-  // Uses long type to support large datasets over time.
         [Key]
-    public long FrameId { get; set; }
+        public long FrameId { get; set; }
 
-        // Foreign key to the patient this frame belongs to.
-      [ForeignKey("ApplicationUser")]
-        public string PatientUserId { get; set; }
+        // Patient this frame belongs to
+        [Required]
+        [ForeignKey("PatientUser")]
+        public string PatientUserId { get; set; } = string.Empty;
 
-  // Navigation property to the patient user.
-        public ApplicationUser PatientUser { get; set; }
+        public virtual ApplicationUser? PatientUser { get; set; }
 
-        // When this pressure frame was recorded.
-        // Used for historical analysis and trend tracking.
-     public DateTime Timestamp { get; set; }
+        // When this reading was captured
+        [Required]
+        public DateTime Timestamp { get; set; }
 
-        // The raw pressure data stored as a JSON 2D array.
-        // Format: "[ [0,1,2...], [3,4,5...], ... ]" (32x32 matrix)
-        // Values range from 0-255 representing pressure intensity.
-  public string PressureDataJson { get; set; }
+        // 32x32 matrix stored as JSON array
+        [Required]
+        public string PressureDataJson { get; set; } = "[]";
 
-        // ========================================================================
-      // CALCULATED METRICS
-        // Pre-computed during data ingestion for faster dashboard display
-   // ========================================================================
-
-        // The highest pressure value found in valid pressure blobs.
-        // Range: 0-255. Used for trend charts and alert detection.
+        // Highest pressure in valid blobs (pre-calculated for dashboard)
+        [Range(0, 255)]
         public int PeakPressureIndex { get; set; }
 
-        // Percentage of sensor area showing contact with the patient.
-        // Calculated as: (pixels above threshold / total pixels) * 100
+        // Percentage of sensor showing contact
+        [Range(0.0, 100.0)]
         public double ContactAreaPercent { get; set; }
 
-   // Contact area broken down by zones (JSON format).
-        // Example: "{ 'UpperRight': 20, 'LowerLeft': 15 }"
-      // Used for detailed pressure distribution analysis.
-        public string ZonalContactAreaJson { get; set; }
+        // Contact area broken down by zones (JSON)
+        public string? ZonalContactAreaJson { get; set; }
 
-     // Whether this frame triggered a high-pressure alert.
-        // True if peak pressure exceeds the patient's threshold in a valid blob.
+        // True if this frame triggered a high-pressure alert
         public bool IsAlertFlagged { get; set; }
     }
 }

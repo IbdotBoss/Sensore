@@ -1,14 +1,12 @@
 namespace Sensore.Models
 {
-    // View model for the error page.
-    // Displays error information when something goes wrong.
+    // View model for error pages with request tracking.
     public class ErrorViewModel
     {
-        // The unique identifier for this request, used for troubleshooting.
+        // Unique request identifier for troubleshooting.
         public string? RequestId { get; set; }
 
-        // Determines if the RequestId should be displayed.
-        // Only shows when a valid RequestId exists.
+        // True if RequestId should be displayed (not null/empty).
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
     }
 }
